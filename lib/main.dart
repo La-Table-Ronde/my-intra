@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:my_intra/gpa.dart';
+import 'package:my_intra/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_cookie_manager/webview_cookie_manager.dart';
 import 'package:http/http.dart' as http;
@@ -23,18 +24,18 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 // #enddocregion platform_imports
 
-void main() => runApp(const MaterialApp(home: WebViewExample()));
+void main() => runApp(const MaterialApp(home: HomePage()));
 
 String? _user;
 
-class WebViewExample extends StatefulWidget {
-  const WebViewExample({super.key});
+class LoginIntra extends StatefulWidget {
+  const LoginIntra({super.key});
 
   @override
-  State<WebViewExample> createState() => _WebViewExampleState();
+  State<LoginIntra> createState() => _LoginIntraState();
 }
 
-class _WebViewExampleState extends State<WebViewExample> {
+class _LoginIntraState extends State<LoginIntra> {
   late final WebViewController _controller;
 
   @override
@@ -119,7 +120,6 @@ Page resource error:
         // This drop down menu demonstrates that Flutter widgets can be shown over the web view.
         actions: <Widget>[
           NavigationControls(webViewController: _controller),
-          SampleMenu(webViewController: _controller),
         ],
       ),
       body: WebViewWidget(controller: _controller),
@@ -140,159 +140,18 @@ Page resource error:
             final _prefs = await SharedPreferences.getInstance();
             _prefs.setString("user", item.value);
             _user = item.value;
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const GetGpa()),
-      );            break;
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePageLoggedIn()),
+            );
+            return;
           }
         }
-ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text("Vous n'êtes pas connecté !"),
-    ));      },
-      child: const Text("Je suis connecté"),
-    );
-  }
-}
-
-enum MenuOptions {
-  showUserAgent,
-  listCookies,
-  clearCookies,
-  addToCache,
-  listCache,
-  clearCache,
-  navigationDelegate,
-  doPostRequest,
-  loadLocalFile,
-  loadFlutterAsset,
-  loadHtmlString,
-  transparentBackground,
-  setCookie,
-}
-
-class SampleMenu extends StatelessWidget {
-  SampleMenu({
-    super.key,
-    required this.webViewController,
-  });
-
-  final WebViewController webViewController;
-  late final WebViewCookieManager cookieManager = WebViewCookieManager();
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<MenuOptions>(
-      key: const ValueKey<String>('ShowPopupMenu'),
-      onSelected: (MenuOptions value) {
-        switch (value) {
-          case MenuOptions.listCookies:
-            _onListCookies(context);
-            break;
-          case MenuOptions.clearCookies:
-            _onClearCookies(context);
-            break;
-        }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Vous n'êtes pas connecté !"),
+        ));
       },
-      itemBuilder: (BuildContext context) => <PopupMenuItem<MenuOptions>>[
-        const PopupMenuItem<MenuOptions>(
-          value: MenuOptions.showUserAgent,
-          child: Text('Show user agent'),
-        ),
-        const PopupMenuItem<MenuOptions>(
-          value: MenuOptions.listCookies,
-          child: Text('List cookies'),
-        ),
-        const PopupMenuItem<MenuOptions>(
-          value: MenuOptions.clearCookies,
-          child: Text('Clear cookies'),
-        ),
-        const PopupMenuItem<MenuOptions>(
-          value: MenuOptions.addToCache,
-          child: Text('Add to cache'),
-        ),
-        const PopupMenuItem<MenuOptions>(
-          value: MenuOptions.listCache,
-          child: Text('List cache'),
-        ),
-        const PopupMenuItem<MenuOptions>(
-          value: MenuOptions.clearCache,
-          child: Text('Clear cache'),
-        ),
-        const PopupMenuItem<MenuOptions>(
-          value: MenuOptions.navigationDelegate,
-          child: Text('Navigation Delegate example'),
-        ),
-        const PopupMenuItem<MenuOptions>(
-          value: MenuOptions.doPostRequest,
-          child: Text('Post Request'),
-        ),
-        const PopupMenuItem<MenuOptions>(
-          value: MenuOptions.loadHtmlString,
-          child: Text('Load HTML string'),
-        ),
-        const PopupMenuItem<MenuOptions>(
-          value: MenuOptions.loadLocalFile,
-          child: Text('Load local file'),
-        ),
-        const PopupMenuItem<MenuOptions>(
-          value: MenuOptions.loadFlutterAsset,
-          child: Text('Load Flutter Asset'),
-        ),
-        const PopupMenuItem<MenuOptions>(
-          key: ValueKey<String>('ShowTransparentBackgroundExample'),
-          value: MenuOptions.transparentBackground,
-          child: Text('Transparent background example'),
-        ),
-        const PopupMenuItem<MenuOptions>(
-          value: MenuOptions.setCookie,
-          child: Text('Set cookie'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _onListCookies(BuildContext context) async {
-    final String cookies = await webViewController
-        .runJavaScriptReturningResult('document.cookie') as String;
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Text('Cookies:'),
-            _getCookieList(cookies),
-          ],
-        ),
-      ));
-    }
-  }
-
-  Future<void> _onClearCookies(BuildContext context) async {
-    final bool hadCookies = await cookieManager.clearCookies();
-    String message = 'There were cookies. Now, they are gone!';
-    if (!hadCookies) {
-      message = 'There are no cookies.';
-    }
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(message),
-      ));
-    }
-  }
-
-  Widget _getCookieList(String cookies) {
-    if (cookies == null || cookies == '""') {
-      return Container();
-    }
-    final List<String> cookieList = cookies.split(';');
-    print('cookieList: $cookieList');
-    final Iterable<Text> cookieWidgets =
-        cookieList.map((String cookie) => Text(cookie));
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: cookieWidgets.toList(),
+      child: const Text("Je suis connecté"),
     );
   }
 }
