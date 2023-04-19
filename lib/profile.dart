@@ -24,7 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Container(
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.all(Radius.circular(12)),
                 color: Colors.blue,
@@ -44,8 +44,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const Text("Total credits acquired :"),
                       Text(widget.data.fullCredits),
-                      Text("Name : "),
-                      Text(widget.data.name + " " + widget.data.firstname)
+                      const Text("Name : "),
+                      Text("${widget.data.name} ${widget.data.firstname}")
                     ],
                   ),
                   Column(
@@ -69,14 +69,14 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           ElevatedButton(
               onPressed: () async {
-                final _prefs = await SharedPreferences.getInstance();
-                _prefs.clear();
+                final prefs = await SharedPreferences.getInstance();
+                prefs.clear();
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginIntra()),
                 );
               },
-              child: Text("Se déconnecter"))
+              child: const Text("Se déconnecter"))
         ],
       ),
     );

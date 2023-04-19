@@ -1,8 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,23 +15,23 @@ class _GetGpaState extends State<GetGpa> {
   String gpa = "Unknown";
   String response = "";
   Future<dynamic> makeHttpRequestWithCookie() async {
-    final _prefs = await SharedPreferences.getInstance();
-    String? _user = _prefs.getString("user");
+    final prefs = await SharedPreferences.getInstance();
+    String? user = prefs.getString("user");
 
     // Define the URL and endpoint of the API you want to call
-    final url = 'https://intra.epitech.eu/user/?format=json';
+    const url = 'https://intra.epitech.eu/user/?format=json';
 
     // Create a new http.Client instance
     final client = http.Client();
 
     // Define your cookie value
-    final cookieValue = _user;
+    final cookieValue = user;
 
     // Create a new http.Request object with the desired URL
     final request = http.Request('GET', Uri.parse(url));
     print(cookieValue);
     // Set the cookie header in the request
-    request.headers['cookie'] = "user=" + cookieValue!;
+    request.headers['cookie'] = "user=${cookieValue!}";
 
     // Send the request and wait for the response
     final response = await client.send(request);
@@ -75,7 +73,7 @@ class _GetGpaState extends State<GetGpa> {
                     });
                   });
                 },
-                child: Text("Get GPA")),
+                child: const Text("Get GPA")),
             Text(response),
           ],
         ));

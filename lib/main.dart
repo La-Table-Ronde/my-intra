@@ -2,20 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/material.dart';
 // ignore_for_file: public_member_api_docs
 
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:my_intra/gpa.dart';
 import 'package:my_intra/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_cookie_manager/webview_cookie_manager.dart';
-import 'package:http/http.dart' as http;
-
-import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 // #docregion platform_imports
 // Import for Android features.
@@ -68,8 +60,24 @@ class _LoginIntraState extends State<LoginIntra> {
           onPageStarted: (String url) {
             debugPrint('Page started loading: $url');
           },
-          onPageFinished: (String url) {
-            debugPrint('Page finished loading: $url');
+          onPageFinished: (String url) async {
+            final cookieManager = WebviewCookieManager();
+            final gotCookies =
+                await cookieManager.getCookies('https://intra.epitech.eu');
+            for (var item in gotCookies) {
+              print(item);
+              if (item.name == "user") {
+                final prefs = await SharedPreferences.getInstance();
+                prefs.setString("user", item.value);
+                _user = item.value;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const HomePageLoggedIn()),
+                );
+                return;
+              }
+            }
           },
           onWebResourceError: (WebResourceError error) {
             debugPrint('''
@@ -114,7 +122,7 @@ Page resource error:
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Flutter WebView example'),
         // This drop down menu demonstrates that Flutter widgets can be shown over the web view.
@@ -137,8 +145,8 @@ Page resource error:
         for (var item in gotCookies) {
           print(item);
           if (item.name == "user") {
-            final _prefs = await SharedPreferences.getInstance();
-            _prefs.setString("user", item.value);
+            final prefs = await SharedPreferences.getInstance();
+            prefs.setString("user", item.value);
             _user = item.value;
             Navigator.push(
               context,
@@ -147,7 +155,7 @@ Page resource error:
             return;
           }
         }
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text("Vous n'êtes pas connecté !"),
         ));
       },
@@ -164,7 +172,7 @@ class NavigationControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: <Widget>[],
+      children: const <Widget>[],
     );
   }
 }

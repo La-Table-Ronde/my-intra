@@ -1,11 +1,13 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
+import 'package:my_intra/home_widget.dart';
 import 'package:my_intra/main.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -25,16 +27,16 @@ class _HomePageState extends State<HomePage> {
           future: checkUserLoggedIn(),
           builder: (context, AsyncSnapshot<bool> res) {
             if (res.hasData == false) {
-              return CircularProgressIndicator();
+              return const CircularProgressIndicator();
             }
             if (res.hasError == true || res.hasData && res.data == false) {
               _showDialogConnexionIntra(context).then((value) => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const LoginIntra()),
                   ));
-              return Text("Une erreur s'est produite");
+              return const Text("Une erreur s'est produite");
             } else {
-              return HomePageLoggedIn();
+              return const HomePageLoggedIn();
             }
           },
         ),
@@ -63,38 +65,76 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
           return Text("Une erreur s'est produite hmm ${res.error}");
         }
         if (res.hasData && res.data != null) {
-          return Scaffold(
-              bottomNavigationBar: BottomNavigationBar(
-                items: [
-                  BottomNavigationBarItem(
-                      icon: Icon(
-                        Icons.home,
-                        color: Colors.grey,
+          return SafeArea(
+            child: Scaffold(
+                bottomNavigationBar: Padding(
+                  padding:
+                      const EdgeInsets.only(bottom: 19, right: 14, left: 14),
+                  child: Container(
+                    decoration: BoxDecoration(
+                        border: Border.all(
+                            color: const Color(0xFFC8D1E6), width: 3),
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(20))),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      child: BottomNavigationBar(
+                        type: BottomNavigationBarType.fixed,
+                        showSelectedLabels: false,
+                        showUnselectedLabels: false,
+                        selectedIconTheme:
+                            const IconThemeData(color: Color(0xFF7293E1)),
+                        items: [
+                          BottomNavigationBarItem(
+                              icon: SvgPicture.asset(
+                                _selectedIndex == 0
+                                    ? "assets/home-icon-selected.svg"
+                                    : "assets/home-icon.svg",
+                              ),
+                              label: "Home"),
+                          BottomNavigationBarItem(
+                              icon: SvgPicture.asset(
+                                _selectedIndex == 1
+                                    ? "assets/calendar-icon-selected.svg"
+                                    : "assets/calendar-icon.svg",
+                              ),
+                              label: "Agenda"),
+                          BottomNavigationBarItem(
+                              icon: SvgPicture.asset(
+                                _selectedIndex == 2
+                                    ? "assets/notif-icon-selected.svg"
+                                    : "assets/notif-icon.svg",
+                              ),
+                              label: "Alertes"),
+                          BottomNavigationBarItem(
+                              icon: SvgPicture.asset(
+                                _selectedIndex == 3
+                                    ? "assets/profile-icon-selected.svg"
+                                    : "assets/profile-icon.svg",
+                              ),
+                              label: "profil")
+                        ],
+                        currentIndex: _selectedIndex,
+                        onTap: (index) {
+                          setState(() {
+                            _selectedIndex = index;
+                            displayedWidget = null;
+                            if (index == 3) {
+                              displayedWidget = ProfilePage(data: res.data!);
+                            }
+                            if (index == 0) {
+                              displayedWidget = HomeWidget(data: res.data!);
+                            }
+                          });
+                        },
                       ),
-                      label: "Home"),
-                  BottomNavigationBarItem(
-                      icon: Icon(Icons.calendar_month, color: Colors.grey),
-                      label: "Agenda"),
-                  BottomNavigationBarItem(
-                      icon: Icon(Icons.notification_add, color: Colors.grey),
-                      label: "Alertes"),
-                  BottomNavigationBarItem(
-                      icon: Icon(Icons.person, color: Colors.grey),
-                      label: "Profil"),
-                ],
-                selectedItemColor: Colors.grey,
-                currentIndex: _selectedIndex,
-                onTap: (index) {
-                  setState(() {
-                    _selectedIndex = index;
-                    if (index == 3)
-                      displayedWidget = ProfilePage(data: res.data!);
-                  });
-                },
-              ),
-              body: displayedWidget);
+                    ),
+                  ),
+                ),
+                body: displayedWidget),
+          );
         } else {
-          return CircularProgressIndicator();
+          return const CircularProgressIndicator();
         }
       },
     );
@@ -102,14 +142,14 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
 }
 
 Future<bool> checkUserLoggedIn() async {
-  final _prefs = await SharedPreferences.getInstance();
-  String? _user = _prefs.getString("user");
-  if (_user == null) {
+  final prefs = await SharedPreferences.getInstance();
+  String? user = prefs.getString("user");
+  if (user == null) {
     return false;
   }
-  final url = 'https://intra.epitech.eu/user/?format=json';
+  const url = 'https://intra.epitech.eu/user/?format=json';
   final client = http.Client();
-  final cookieValue = _user;
+  final cookieValue = user;
   final request = http.Request('GET', Uri.parse(url));
   request.headers['cookie'] = "user=$cookieValue";
   final response = await client.send(request);
@@ -122,7 +162,7 @@ Future<bool> checkUserLoggedIn() async {
 }
 
 Future<void> _showDialogConnexionIntra(BuildContext context) async {
-  await Future.delayed(Duration(microseconds: 1));
+  await Future.delayed(const Duration(microseconds: 1));
   return showDialog<void>(
     context: context,
     barrierDismissible: false, // user must tap button!
@@ -155,11 +195,11 @@ Future<void> _showDialogConnexionIntra(BuildContext context) async {
 }
 
 Future<Profile> getProfileData() async {
-  final _prefs = await SharedPreferences.getInstance();
-  String? _user = _prefs.getString("user");
-  final url = 'https://intra.epitech.eu/user/?format=json';
+  final prefs = await SharedPreferences.getInstance();
+  String? user = prefs.getString("user");
+  const url = 'https://intra.epitech.eu/user/?format=json';
   final client = http.Client();
-  final cookieValue = _user;
+  final cookieValue = user;
   final request = http.Request('GET', Uri.parse(url));
   request.headers['cookie'] = "user=$cookieValue";
   final response = await client.send(request);
