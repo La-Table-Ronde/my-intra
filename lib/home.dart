@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:my_intra/home_widget.dart';
-import 'package:my_intra/main.dart';
 import 'package:my_intra/model/profile.dart';
+import 'package:my_intra/onboarding.dart';
 import 'package:my_intra/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,10 +30,7 @@ class _HomePageState extends State<HomePage> {
               return const CircularProgressIndicator();
             }
             if (res.hasError == true || res.hasData && res.data == false) {
-              _showDialogConnexionIntra(context).then((value) => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginIntra()),
-                  ));
+              return OnboardingWidget();
               return const Text("Une erreur s'est produite");
             } else {
               return const HomePageLoggedIn();
@@ -55,6 +52,7 @@ class HomePageLoggedIn extends StatefulWidget {
 class _HomePageLoggedInState extends State<HomePageLoggedIn> {
   Widget? displayedWidget;
   int _selectedIndex = 0;
+  bool firstRun = true;
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +63,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
           return Text("Une erreur s'est produite hmm ${res.error}");
         }
         if (res.hasData && res.data != null) {
+          firstRun ? displayedWidget = HomeWidget(data: res.data!) : 0;
           return SafeArea(
             child: Scaffold(
                 bottomNavigationBar: Padding(
@@ -83,7 +82,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                         showSelectedLabels: false,
                         showUnselectedLabels: false,
                         selectedIconTheme:
-                            const IconThemeData(color: Color(0xFF7293E1)),
+                        const IconThemeData(color: Color(0xFF7293E1)),
                         items: [
                           BottomNavigationBarItem(
                               icon: SvgPicture.asset(
@@ -117,6 +116,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                         currentIndex: _selectedIndex,
                         onTap: (index) {
                           setState(() {
+                            firstRun = false;
                             _selectedIndex = index;
                             displayedWidget = null;
                             if (index == 3) {
@@ -161,7 +161,7 @@ Future<bool> checkUserLoggedIn() async {
   return true;
 }
 
-Future<void> _showDialogConnexionIntra(BuildContext context) async {
+Future<void> showDialogConnexionIntra(BuildContext context) async {
   await Future.delayed(const Duration(microseconds: 1));
   return showDialog<void>(
     context: context,
@@ -173,17 +173,17 @@ Future<void> _showDialogConnexionIntra(BuildContext context) async {
           child: ListBody(
             children: const <Widget>[
               Text(
-                  'Depuis fin 2022, il n\'est plus possible de se connecter à Epitech Intra via l\'autologin.'),
+                  'Since the end of 2022, it is not longer possible to login with an autologin link.'),
               Text(
-                  'Ainsi, My Intra a été mise à jour pour vous permettre de vous connecter à votre compte Epitech, grâce à un system de cookie.'),
+                  'Therefore, My Intra uses a cookie system to keep you logged in.'),
               Text(
-                  'Pour cela veuillez vous connecter à l\'intra avec votre compte Epitech, puis cliquer sur le bouton "je suis connecté".')
+                  'For this to work, you need to login to your Intra account, then the application will automatically retrieve the cookie.')
             ],
           ),
         ),
         actions: <Widget>[
           TextButton(
-            child: const Text('Se connecter'),
+            child: const Text('Ok'),
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -221,5 +221,7 @@ Future<Profile> getProfileData() async {
       idleLogTime: value['nsstat']['idle'].toString(),
       fullCredits: value['credits'].toString(),
       email: value['internal_email'].toString(),
-      cookie: cookieValue!);
+      cookie: cookieValue!,
+      promo: value['promo'].toString(),
+      studentyear: value['studentyear'].toString());
 }

@@ -9,17 +9,20 @@ class Profile {
   final String email;
   final String cookie;
   final String idleLogTime;
+  final String promo;
+  final String studentyear;
 
-  Profile({
-    required this.gpa,
-    required this.name,
-    required this.firstname,
-    required this.semester,
-    required this.city,
-    required this.activeLogTime,
-    required this.idleLogTime,
-    required this.fullCredits,
-    required this.email,
-    required this.cookie,
-  });
+  Profile(
+      {required this.gpa,
+      required this.name,
+      required this.firstname,
+      required this.semester,
+      required this.city,
+      required this.activeLogTime,
+      required this.idleLogTime,
+      required this.fullCredits,
+      required this.email,
+      required this.cookie,
+      required this.promo,
+      required this.studentyear});
 }

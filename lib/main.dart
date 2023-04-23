@@ -123,14 +123,8 @@ Page resource error:
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Flutter WebView example'),
-        // This drop down menu demonstrates that Flutter widgets can be shown over the web view.
-        actions: <Widget>[
-          NavigationControls(webViewController: _controller),
-        ],
-      ),
-      body: WebViewWidget(controller: _controller),
+      appBar: null,
+      body: SafeArea(child: WebViewWidget(controller: _controller)),
       floatingActionButton: favoriteButton(),
     );
   }
@@ -138,28 +132,9 @@ Page resource error:
   Widget favoriteButton() {
     return ElevatedButton(
       onPressed: () async {
-        final cookieManager = WebviewCookieManager();
-
-        final gotCookies =
-            await cookieManager.getCookies('https://intra.epitech.eu');
-        for (var item in gotCookies) {
-          print(item);
-          if (item.name == "user") {
-            final prefs = await SharedPreferences.getInstance();
-            prefs.setString("user", item.value);
-            _user = item.value;
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const HomePageLoggedIn()),
-            );
-            return;
-          }
-        }
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Vous n'êtes pas connecté !"),
-        ));
+        showDialogConnexionIntra(context);
       },
-      child: const Text("Je suis connecté"),
+      child: const Text("Help"),
     );
   }
 }
