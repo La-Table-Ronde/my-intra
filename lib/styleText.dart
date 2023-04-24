@@ -5,7 +5,8 @@ class StyledTextWidget extends StatelessWidget {
   final TextStyle defaultStyle;
   final List<TextStyle> wordStyles;
 
-  StyledTextWidget({
+  const StyledTextWidget({
+    super.key,
     required this.text,
     required this.defaultStyle,
     required this.wordStyles,
@@ -22,7 +23,7 @@ class StyledTextWidget extends StatelessWidget {
             TextSpan(
               text: wordStyles.length + 1 < words.length
                   ? words[i]
-                  : words[i] + " ",
+                  : "${words[i]} ",
               style: wordStyles.length > i ? wordStyles[i] : defaultStyle,
             ),
         ],

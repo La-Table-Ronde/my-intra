@@ -14,9 +14,10 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF7293E1),
+      backgroundColor: const Color(0xFF7293E1),
       body: Padding(
-        padding: EdgeInsets.only(top: 92, right: 29, left: 29, bottom: 65),
+        padding:
+            const EdgeInsets.only(top: 92, right: 29, left: 29, bottom: 65),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -58,7 +59,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
               child: Container(
                 width: 332,
                 height: 40,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.all(Radius.circular(53))),
                 child: Center(
@@ -66,7 +67,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                   "Sign In",
                   style: GoogleFonts.openSans(
                       fontSize: 16,
-                      color: Color(0xFF7293E1),
+                      color: const Color(0xFF7293E1),
                       fontWeight: FontWeight.w700),
                 )),
               ),

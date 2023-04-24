@@ -30,7 +30,7 @@ class _HomePageState extends State<HomePage> {
               return const CircularProgressIndicator();
             }
             if (res.hasError == true || res.hasData && res.data == false) {
-              return OnboardingWidget();
+              return const OnboardingWidget();
               return const Text("Une erreur s'est produite");
             } else {
               return const HomePageLoggedIn();
@@ -82,7 +82,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                         showSelectedLabels: false,
                         showUnselectedLabels: false,
                         selectedIconTheme:
-                        const IconThemeData(color: Color(0xFF7293E1)),
+                            const IconThemeData(color: Color(0xFF7293E1)),
                         items: [
                           BottomNavigationBarItem(
                               icon: SvgPicture.asset(

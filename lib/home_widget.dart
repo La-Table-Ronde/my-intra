@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:my_intra/model/profile.dart';
+import 'package:my_intra/model/projects.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'consts.dart' as consts;
 
@@ -104,8 +109,60 @@ class _HomeWidgetState extends State<HomeWidget> {
                   fontWeight: FontWeight.w600),
             )),
           ),
+          FutureBuilder(
+            future: getProjectData(),
+            builder: (context, AsyncSnapshot<List<Projects>> snapshot) {
+              return Text("");
+            },
+          )
         ],
       ),
     );
+  }
+
+  Future<List<Projects>> getProjectData() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? user = prefs.getString("user");
+    const url = 'https://intra.epitech.eu/?format=json';
+    final client = http.Client();
+    final cookieValue = user;
+    final request = http.Request('GET', Uri.parse(url));
+    request.headers['cookie'] = "user=$cookieValue";
+    final response = await client.send(request);
+    if (response.statusCode != 200) {
+      return Future.error("Error${response.statusCode}");
+    }
+    final responseBytes = await response.stream.toList();
+    final responseString =
+        utf8.decode(responseBytes.expand((byte) => byte).toList());
+    final value = jsonDecode(responseString);
+    List<dynamic> projects = value['board']['projets'];
+    List<Projects> list = [];
+    for (var project in projects) {
+      String titleLink = project['title_link'];
+      titleLink = titleLink.replaceAll(r'\/', '/');
+      titleLink = titleLink.replaceAll('\\', '');
+      titleLink = 'https://intra.epitech.eu${titleLink}project/?format=json';
+      final request = http.Request('GET', Uri.parse(titleLink));
+      request.headers['cookie'] = "user=$cookieValue";
+      final response = await client.send(request);
+      print(response.statusCode);
+      if (response.statusCode != 200) {
+        print("err");
+        return Future.error("Error${response.statusCode}");
+      }
+      final responseBytes = await response.stream.toList();
+      final responseString =
+          utf8.decode(responseBytes.expand((byte) => byte).toList());
+      final value = jsonDecode(responseString);
+      print(value['title  ']);
+      list.add(Projects(
+          title: value['title'].toString(),
+          endDate: DateTime.parse(value['end']),
+          module: value['module_title'].toString(),
+          registered: value['user_project_status'] != null ? true : false));
+    }
+    print("ee");
+    return list;
   }
 }
