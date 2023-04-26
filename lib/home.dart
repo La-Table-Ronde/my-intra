@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:my_intra/home_widget.dart';
 import 'package:my_intra/model/profile.dart';
+import 'package:my_intra/model/projects.dart';
 import 'package:my_intra/onboarding.dart';
 import 'package:my_intra/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,6 +54,14 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
   Widget? displayedWidget;
   int _selectedIndex = 0;
   bool firstRun = true;
+  Future<List<Projects>>? projects;
+
+  @override
+  void initState() {
+    projects = getProjectData();
+    // TODO: implement initState
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +72,12 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
           return Text("Une erreur s'est produite hmm ${res.error}");
         }
         if (res.hasData && res.data != null) {
-          firstRun ? displayedWidget = HomeWidget(data: res.data!) : 0;
+          firstRun
+              ? displayedWidget = HomeWidget(
+                  data: res.data!,
+                  projects: projects,
+                )
+              : 0;
           return SafeArea(
             child: Scaffold(
                 bottomNavigationBar: Padding(
@@ -123,7 +137,10 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                               displayedWidget = ProfilePage(data: res.data!);
                             }
                             if (index == 0) {
-                              displayedWidget = HomeWidget(data: res.data!);
+                              displayedWidget = HomeWidget(
+                                data: res.data!,
+                                projects: projects,
+                              );
                             }
                           });
                         },
@@ -224,4 +241,48 @@ Future<Profile> getProfileData() async {
       cookie: cookieValue!,
       promo: value['promo'].toString(),
       studentyear: value['studentyear'].toString());
+}
+
+Future<List<Projects>> getProjectData() async {
+  final prefs = await SharedPreferences.getInstance();
+  String? user = prefs.getString("user");
+  const url = 'https://intra.epitech.eu/?format=json';
+  final client = http.Client();
+  final cookieValue = user;
+  final request = http.Request('GET', Uri.parse(url));
+  request.headers['cookie'] = "user=$cookieValue";
+  final response = await client.send(request);
+  if (response.statusCode != 200) {
+    return Future.error("Error${response.statusCode}");
+  }
+  final responseBytes = await response.stream.toList();
+  final responseString =
+      utf8.decode(responseBytes.expand((byte) => byte).toList());
+  final value = jsonDecode(responseString);
+  List<dynamic> projects = value['board']['projets'];
+  List<Projects> list = [];
+  for (var project in projects) {
+    String titleLink = project['title_link'];
+    titleLink = titleLink.replaceAll(r'\/', '/');
+    titleLink = titleLink.replaceAll('\\', '');
+    titleLink = 'https://intra.epitech.eu${titleLink}project/?format=json';
+    final request = http.Request('GET', Uri.parse(titleLink));
+    request.headers['cookie'] = "user=$cookieValue";
+    final response = await client.send(request);
+    print(response.statusCode);
+    if (response.statusCode != 200) {
+      print("err");
+      return Future.error("Error${response.statusCode}");
+    }
+    final responseBytes = await response.stream.toList();
+    final responseString =
+        utf8.decode(responseBytes.expand((byte) => byte).toList());
+    final value = jsonDecode(responseString);
+    list.add(Projects(
+        title: value['title'].toString(),
+        endDate: DateTime.parse(value['end']),
+        module: value['module_title'].toString(),
+        registered: value['user_project_status'] != null ? true : false));
+  }
+  return list;
 }

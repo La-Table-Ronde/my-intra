@@ -1,16 +1,14 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'consts.dart' as consts;
 
 class HomeWidget extends StatefulWidget {
-  const HomeWidget({Key? key, required this.data}) : super(key: key);
+  const HomeWidget({Key? key, required this.data, required this.projects})
+      : super(key: key);
+  final Future<List<Projects>>? projects;
   final Profile data;
 
   @override
@@ -23,6 +21,7 @@ class _HomeWidgetState extends State<HomeWidget> {
     return Container(
       padding: const EdgeInsets.only(left: 14, right: 14, top: 50, bottom: 14),
       child: Column(
+        mainAxisSize: MainAxisSize.max,
         children: [
           Container(
             padding: const EdgeInsets.all(8),
@@ -39,13 +38,13 @@ class _HomeWidgetState extends State<HomeWidget> {
                     Text(
                       "Welcome,",
                       style: GoogleFonts.openSans(
-                          fontWeight: FontWeight.w700, fontSize: 15),
+                          fontWeight: FontWeight.w400, fontSize: 15),
                       textAlign: TextAlign.start,
                     ),
                     Text(
                       "${widget.data.firstname} ${widget.data.name}",
                       style: GoogleFonts.openSans(
-                          fontWeight: FontWeight.w400, fontSize: 15),
+                          fontWeight: FontWeight.w700, fontSize: 15),
                       textAlign: TextAlign.start,
                     ),
                   ],
@@ -66,15 +65,15 @@ class _HomeWidgetState extends State<HomeWidget> {
           Padding(
             padding: const EdgeInsets.only(top: 14, bottom: 5),
             child: Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(20),
-              width: 361,
-              height: 140,
               decoration: BoxDecoration(
                   color: const Color(0xFF7293E1),
                   border: Border.all(color: const Color(0xFFC8D1E6), width: 3),
                   borderRadius: const BorderRadius.all(Radius.circular(20))),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
                 children: [
                   Text(
                     "You have",
@@ -95,7 +94,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             ),
           ),
           Container(
-            width: 361,
+            width: double.infinity,
             height: 40,
             decoration: BoxDecoration(
                 borderRadius: const BorderRadius.all(Radius.circular(15)),
@@ -109,60 +108,128 @@ class _HomeWidgetState extends State<HomeWidget> {
                   fontWeight: FontWeight.w600),
             )),
           ),
-          FutureBuilder(
-            future: getProjectData(),
-            builder: (context, AsyncSnapshot<List<Projects>> snapshot) {
-              return Text("");
-            },
+          Padding(
+            padding: const EdgeInsets.only(top: 10, bottom: 10),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Current projects",
+                textAlign: TextAlign.start,
+                style: GoogleFonts.openSans(
+                    fontWeight: FontWeight.w600, fontSize: 16),
+              ),
+            ),
+          ),
+          Flexible(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: FutureBuilder(
+                future: widget.projects,
+                builder: (context, AsyncSnapshot<List<Projects>> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting ||
+                      snapshot.hasData == false) {
+                    return CircularProgressIndicator();
+                  } else if (snapshot.hasData && snapshot.data != null) {
+                    snapshot.data!
+                        .removeWhere((element) => element.registered == false);
+                    snapshot.data!.removeWhere(
+                        (element) => element.endDate.isBefore(DateTime.now()));
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 15, right: 15),
+                      child: Container(
+                        width: double.infinity,
+                        child: ListView.separated(
+                          physics: NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              padding: EdgeInsets.only(
+                                  left: 9, right: 9, top: 10, bottom: 10),
+                              constraints:
+                                  BoxConstraints(minHeight: 52, minWidth: 322),
+                              decoration: BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10)),
+                                  border: Border.all(
+                                      width: 2, color: Color(0xFFC8D1E6))),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    width: 46,
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Image.asset(
+                                        "assets/project-icon.png",
+                                        width: 32,
+                                        height: 32,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      snapshot.data![index].title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.start,
+                                      style: GoogleFonts.openSans(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16),
+                                    ),
+                                  ),
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "End:",
+                                        textAlign: TextAlign.start,
+                                        style: GoogleFonts.openSans(
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 12),
+                                      ),
+                                      Text(
+                                        snapshot.data![index].endDate
+                                                    .difference(DateTime.now())
+                                                    .inDays >
+                                                1
+                                            ? "${snapshot.data![index].endDate.difference(DateTime.now()).inDays} days"
+                                            : "${snapshot.data![index].endDate.difference(DateTime.now()).inDays} day",
+                                        style: GoogleFonts.openSans(
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF7293E1),
+                                            fontSize: 12),
+                                      )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          separatorBuilder: (BuildContext context, int index) {
+                            return SizedBox(height: 10);
+                          },
+                        ),
+                      ),
+                    );
+                  } else if (snapshot.hasData && snapshot.data == null) {
+                    return Text("");
+                  } else {
+                    return Text("Error. Please reload the app");
+                  }
+                },
+              ),
+            ),
           )
         ],
       ),
     );
   }
 
-  Future<List<Projects>> getProjectData() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? user = prefs.getString("user");
-    const url = 'https://intra.epitech.eu/?format=json';
-    final client = http.Client();
-    final cookieValue = user;
-    final request = http.Request('GET', Uri.parse(url));
-    request.headers['cookie'] = "user=$cookieValue";
-    final response = await client.send(request);
-    if (response.statusCode != 200) {
-      return Future.error("Error${response.statusCode}");
-    }
-    final responseBytes = await response.stream.toList();
-    final responseString =
-        utf8.decode(responseBytes.expand((byte) => byte).toList());
-    final value = jsonDecode(responseString);
-    List<dynamic> projects = value['board']['projets'];
-    List<Projects> list = [];
-    for (var project in projects) {
-      String titleLink = project['title_link'];
-      titleLink = titleLink.replaceAll(r'\/', '/');
-      titleLink = titleLink.replaceAll('\\', '');
-      titleLink = 'https://intra.epitech.eu${titleLink}project/?format=json';
-      final request = http.Request('GET', Uri.parse(titleLink));
-      request.headers['cookie'] = "user=$cookieValue";
-      final response = await client.send(request);
-      print(response.statusCode);
-      if (response.statusCode != 200) {
-        print("err");
-        return Future.error("Error${response.statusCode}");
-      }
-      final responseBytes = await response.stream.toList();
-      final responseString =
-          utf8.decode(responseBytes.expand((byte) => byte).toList());
-      final value = jsonDecode(responseString);
-      print(value['title  ']);
-      list.add(Projects(
-          title: value['title'].toString(),
-          endDate: DateTime.parse(value['end']),
-          module: value['module_title'].toString(),
-          registered: value['user_project_status'] != null ? true : false));
-    }
-    print("ee");
-    return list;
-  }
 }
