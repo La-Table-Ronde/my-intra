@@ -12,11 +12,13 @@ class HomeWidget extends StatefulWidget {
       {Key? key,
       required this.data,
       required this.projects,
-      this.notifications})
+      this.notifications,
+      required this.index})
       : super(key: key);
   final Future<List<Projects>>? projects;
   final Profile data;
   final Future<List<Notifications>>? notifications;
+  final ValueNotifier<int> index;
 
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
@@ -129,20 +131,25 @@ class _HomeWidgetState extends State<HomeWidget> {
                   }),
             ),
           ),
-          Container(
-            width: double.infinity,
-            height: 40,
-            decoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(Radius.circular(15)),
-                border: Border.all(color: const Color(0xFFC8D1E6), width: 2)),
-            child: Center(
-                child: Text(
-              "Click here to see your notifications",
-              style: GoogleFonts.openSans(
-                  color: const Color(0xFF7293E1),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600),
-            )),
+          InkWell(
+            onTap: () {
+              widget.index.value = 2;
+            },
+            child: Container(
+              width: double.infinity,
+              height: 40,
+              decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.all(Radius.circular(15)),
+                  border: Border.all(color: const Color(0xFFC8D1E6), width: 2)),
+              child: Center(
+                  child: Text(
+                "Click here to see your notifications",
+                style: GoogleFonts.openSans(
+                    color: const Color(0xFF7293E1),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600),
+              )),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.only(top: 10, bottom: 10),
@@ -195,7 +202,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   SizedBox(
                                     width: 46,
@@ -209,14 +216,16 @@ class _HomeWidgetState extends State<HomeWidget> {
                                     ),
                                   ),
                                   Expanded(
-                                    child: Text(
-                                      snapshot.data![index].title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.start,
-                                      style: GoogleFonts.openSans(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16),
+                                    child: Center(
+                                      child: Text(
+                                        snapshot.data![index].title,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.start,
+                                        style: GoogleFonts.openSans(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16),
+                                      ),
                                     ),
                                   ),
                                   Column(
@@ -264,7 +273,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                 },
               ),
             ),
-          )
+          ),
         ],
       ),
     );

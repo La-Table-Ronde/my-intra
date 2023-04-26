@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -7,6 +8,7 @@ import 'package:my_intra/home_widget.dart';
 import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
+import 'package:my_intra/notifications_widget.dart';
 import 'package:my_intra/onboarding.dart';
 import 'package:my_intra/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,7 +54,7 @@ class HomePageLoggedIn extends StatefulWidget {
 
 class _HomePageLoggedInState extends State<HomePageLoggedIn> {
   Widget? displayedWidget;
-  int _selectedIndex = 0;
+  ValueNotifier<int> _selectedIndex = ValueNotifier<int>(0);
   bool firstRun = true;
   Future<List<Projects>>? projects;
   Future<List<Notifications>>? notifications;
@@ -79,80 +81,105 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
             data: res.data!,
                   projects: projects,
                   notifications: notifications,
+                  index: _selectedIndex,
                 )
               : 0;
           return SafeArea(
-            child: Scaffold(
-                bottomNavigationBar: Padding(
-                  padding:
-                      const EdgeInsets.only(bottom: 19, right: 14, left: 14),
-                  child: Container(
-                    decoration: BoxDecoration(
-                        border: Border.all(
-                            color: const Color(0xFFC8D1E6), width: 3),
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(20))),
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.all(Radius.circular(20)),
-                      child: BottomNavigationBar(
-                        type: BottomNavigationBarType.fixed,
-                        showSelectedLabels: false,
-                        showUnselectedLabels: false,
-                        selectedIconTheme:
-                            const IconThemeData(color: Color(0xFF7293E1)),
-                        items: [
-                          BottomNavigationBarItem(
-                              icon: SvgPicture.asset(
-                                _selectedIndex == 0
-                                    ? "assets/home-icon-selected.svg"
-                                    : "assets/home-icon.svg",
-                              ),
-                              label: "Home"),
-                          BottomNavigationBarItem(
-                              icon: SvgPicture.asset(
-                                _selectedIndex == 1
-                                    ? "assets/calendar-icon-selected.svg"
-                                    : "assets/calendar-icon.svg",
-                              ),
-                              label: "Agenda"),
-                          BottomNavigationBarItem(
-                              icon: SvgPicture.asset(
-                                _selectedIndex == 2
-                                    ? "assets/notif-icon-selected.svg"
-                                    : "assets/notif-icon.svg",
-                              ),
-                              label: "Alertes"),
-                          BottomNavigationBarItem(
-                              icon: SvgPicture.asset(
-                                _selectedIndex == 3
-                                    ? "assets/profile-icon-selected.svg"
-                                    : "assets/profile-icon.svg",
-                              ),
-                              label: "profil")
-                        ],
-                        currentIndex: _selectedIndex,
-                        onTap: (index) {
-                          setState(() {
-                            firstRun = false;
-                            _selectedIndex = index;
-                            displayedWidget = null;
-                            if (index == 3) {
-                              displayedWidget = ProfilePage(data: res.data!);
-                            }
-                            if (index == 0) {
-                              displayedWidget = HomeWidget(
-                                data: res.data!,
-                                projects: projects,
-                                notifications: notifications,
-                              );
-                            }
-                          });
-                        },
+            child: ValueListenableBuilder<int>(
+                valueListenable: _selectedIndex,
+                builder: (context, value, child) {
+                  if (_selectedIndex.value == 2) {
+                    displayedWidget = NotificationsWidget(
+                      notifications: notifications,
+                      data: res.data!,
+                      projects: projects,
+                    );
+                    firstRun = false;
+                  }
+
+                  return Scaffold(
+                      bottomNavigationBar: Padding(
+                        padding: const EdgeInsets.only(
+                            bottom: 19, right: 14, left: 14),
+                        child: Container(
+                          decoration: BoxDecoration(
+                              border: Border.all(
+                                  color: const Color(0xFFC8D1E6), width: 3),
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(20))),
+                          child: ClipRRect(
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(20)),
+                            child: BottomNavigationBar(
+                              type: BottomNavigationBarType.fixed,
+                              showSelectedLabels: false,
+                              showUnselectedLabels: false,
+                              selectedIconTheme:
+                                  const IconThemeData(color: Color(0xFF7293E1)),
+                              items: [
+                                BottomNavigationBarItem(
+                                    icon: SvgPicture.asset(
+                                      _selectedIndex.value == 0
+                                          ? "assets/home-icon-selected.svg"
+                                          : "assets/home-icon.svg",
+                                    ),
+                                    label: "Home"),
+                                BottomNavigationBarItem(
+                                    icon: SvgPicture.asset(
+                                      _selectedIndex.value == 1
+                                          ? "assets/calendar-icon-selected.svg"
+                                          : "assets/calendar-icon.svg",
+                                    ),
+                                    label: "Agenda"),
+                                BottomNavigationBarItem(
+                                    icon: SvgPicture.asset(
+                                      _selectedIndex.value == 2
+                                          ? "assets/notif-icon-selected.svg"
+                                          : "assets/notif-icon.svg",
+                                    ),
+                                    label: "Alertes"),
+                                BottomNavigationBarItem(
+                                    icon: SvgPicture.asset(
+                                      _selectedIndex.value == 3
+                                          ? "assets/profile-icon-selected.svg"
+                                          : "assets/profile-icon.svg",
+                                    ),
+                                    label: "profil")
+                              ],
+                              currentIndex: _selectedIndex.value,
+                              onTap: (index) {
+                                setState(() {
+                                  firstRun = false;
+                                  _selectedIndex.value = index;
+                                  displayedWidget = null;
+                                  if (index == 3) {
+                                    displayedWidget =
+                                        ProfilePage(data: res.data!);
+                                  }
+                                  if (index == 0) {
+                                    displayedWidget = HomeWidget(
+                                      data: res.data!,
+                                      projects: projects,
+                                      notifications: notifications,
+                                      index: _selectedIndex,
+                                    );
+                                  }
+                                  print("index : " + index.toString());
+                                  if (index == 2) {
+                                    displayedWidget = NotificationsWidget(
+                                      notifications: notifications,
+                                      data: res.data!,
+                                      projects: projects,
+                                    );
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                body: displayedWidget),
+                      body: displayedWidget);
+                }),
           );
         } else {
           return const CircularProgressIndicator();
@@ -312,17 +339,29 @@ Future<List<Notifications>> getNotifications() async {
   String? data = prefs.getString("notifications");
   if (data != null) {
     final jsonList = json.decode(data) as List<dynamic>;
+    print("data list : " + json.decode(data).toString());
     list = jsonList.map((jsonObj) => Notifications.fromJson(jsonObj)).toList();
   }
   for (var notification in notifs) {
-    print(notification);
-    if (list.any((element) => element.id == notification['id']) == false) {
-      print("addd");
-      list.add(Notifications(
-          id: notification['id'],
-          title: notification['title'],
-          read: false,
-          date: DateTime.parse(notification['date'])));
+    final newNotif = Notifications(
+        id: notification['id'],
+        title: notification['title'],
+        read: false,
+        date: DateTime.parse(notification['date']));
+    bool alreadyExists = false;
+    for (var obj in list) {
+      if (obj.id == newNotif.id) {
+        if (obj.date != newNotif.date) {
+          print("ERROR DATA for obj : " + obj.id);
+          list[list.indexOf(obj)] = newNotif;
+        }
+        print("${obj.id} is equal to ${newNotif.id}");
+        alreadyExists = true;
+        break;
+      }
+    }
+    if (!alreadyExists) {
+      list.add(newNotif);
     }
   }
   List<Map<String, dynamic>> mapList = [];
@@ -330,7 +369,8 @@ Future<List<Notifications>> getNotifications() async {
     mapList.add(obj.toJson());
   }
   final jsonValue = json.encode(mapList);
+  log(jsonValue.toString());
   await prefs.setString("notifications", jsonValue);
-  print("list : " + list.length.toString());
+  list.sort((a, b) => b.date.compareTo(a.date));
   return list;
 }

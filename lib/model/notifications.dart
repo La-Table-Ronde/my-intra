@@ -2,7 +2,7 @@ class Notifications {
   final String id;
   final String title;
   final DateTime date;
-  final bool read;
+  bool read;
 
   Notifications(
       {required this.id,
