@@ -9,14 +9,21 @@ import 'package:my_intra/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_cookie_manager/webview_cookie_manager.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
 // #docregion platform_imports
 // Import for Android features.
 import 'package:webview_flutter_android/webview_flutter_android.dart';
+
 // Import for iOS features.
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 // #enddocregion platform_imports
 
-void main() => runApp(const MaterialApp(home: HomePage()));
+void main() => runApp(MaterialApp(
+    // standard dark theme
+    darkTheme: ThemeData.dark(),
+    themeMode: ThemeMode.system,
+    debugShowCheckedModeBanner: false,
+    home: HomePage()));
 
 String? _user;
 

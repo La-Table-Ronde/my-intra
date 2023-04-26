@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:my_intra/home_widget.dart';
+import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
 import 'package:my_intra/onboarding.dart';
@@ -22,7 +23,6 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: null,
         body: FutureBuilder(
           future: checkUserLoggedIn(),
@@ -55,10 +55,12 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
   int _selectedIndex = 0;
   bool firstRun = true;
   Future<List<Projects>>? projects;
+  Future<List<Notifications>>? notifications;
 
   @override
   void initState() {
     projects = getProjectData();
+    notifications = getNotifications();
     // TODO: implement initState
     super.initState();
   }
@@ -74,8 +76,9 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
         if (res.hasData && res.data != null) {
           firstRun
               ? displayedWidget = HomeWidget(
-                  data: res.data!,
+            data: res.data!,
                   projects: projects,
+                  notifications: notifications,
                 )
               : 0;
           return SafeArea(
@@ -140,6 +143,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                               displayedWidget = HomeWidget(
                                 data: res.data!,
                                 projects: projects,
+                                notifications: notifications,
                               );
                             }
                           });
@@ -227,13 +231,13 @@ Future<Profile> getProfileData() async {
   final responseString =
       utf8.decode(responseBytes.expand((byte) => byte).toList());
   final value = jsonDecode(responseString);
-
+  print(value);
   return Profile(
       gpa: value['gpa'][0]['gpa'],
       name: value['lastname'].toString(),
       firstname: value['firstname'].toString(),
       semester: value['semester'].toString(),
-      city: value['userinfo']['city']['value'].toString(),
+      city: value['groups'][0]['title'].toString(),
       activeLogTime: value['nsstat']['active'].toString(),
       idleLogTime: value['nsstat']['idle'].toString(),
       fullCredits: value['credits'].toString(),
@@ -284,5 +288,49 @@ Future<List<Projects>> getProjectData() async {
         module: value['module_title'].toString(),
         registered: value['user_project_status'] != null ? true : false));
   }
+  return list;
+}
+
+Future<List<Notifications>> getNotifications() async {
+  final prefs = await SharedPreferences.getInstance();
+  String? user = prefs.getString("user");
+  const url = 'https://intra.epitech.eu/?format=json';
+  final client = http.Client();
+  final cookieValue = user;
+  final request = http.Request('GET', Uri.parse(url));
+  request.headers['cookie'] = "user=$cookieValue";
+  final response = await client.send(request);
+  if (response.statusCode != 200) {
+    return Future.error("Error${response.statusCode}");
+  }
+  final responseBytes = await response.stream.toList();
+  final responseString =
+      utf8.decode(responseBytes.expand((byte) => byte).toList());
+  final value = jsonDecode(responseString);
+  List<dynamic> notifs = value['history'];
+  List<Notifications> list = [];
+  String? data = prefs.getString("notifications");
+  if (data != null) {
+    final jsonList = json.decode(data) as List<dynamic>;
+    list = jsonList.map((jsonObj) => Notifications.fromJson(jsonObj)).toList();
+  }
+  for (var notification in notifs) {
+    print(notification);
+    if (list.any((element) => element.id == notification['id']) == false) {
+      print("addd");
+      list.add(Notifications(
+          id: notification['id'],
+          title: notification['title'],
+          read: false,
+          date: DateTime.parse(notification['date'])));
+    }
+  }
+  List<Map<String, dynamic>> mapList = [];
+  for (Notifications obj in list) {
+    mapList.add(obj.toJson());
+  }
+  final jsonValue = json.encode(mapList);
+  await prefs.setString("notifications", jsonValue);
+  print("list : " + list.length.toString());
   return list;
 }

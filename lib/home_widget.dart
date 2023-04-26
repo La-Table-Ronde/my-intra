@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
 
 import 'consts.dart' as consts;
 
 class HomeWidget extends StatefulWidget {
-  const HomeWidget({Key? key, required this.data, required this.projects})
+  const HomeWidget(
+      {Key? key,
+      required this.data,
+      required this.projects,
+      this.notifications})
       : super(key: key);
   final Future<List<Projects>>? projects;
   final Profile data;
+  final Future<List<Notifications>>? notifications;
 
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
@@ -71,26 +78,55 @@ class _HomeWidgetState extends State<HomeWidget> {
                   color: const Color(0xFF7293E1),
                   border: Border.all(color: const Color(0xFFC8D1E6), width: 3),
                   borderRadius: const BorderRadius.all(Radius.circular(20))),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Text(
-                    "You have",
-                    style: GoogleFonts.openSans(
-                        fontWeight: FontWeight.w400,
-                        fontSize: 20,
-                        color: Colors.white),
-                  ),
-                  Text(
-                    "10 notifications",
-                    style: GoogleFonts.openSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 20,
-                        color: Colors.white),
-                  ),
-                ],
-              ),
+              child: FutureBuilder(
+                  future: widget.notifications,
+                  builder:
+                      (context, AsyncSnapshot<List<Notifications>> snapshot) {
+                    print(snapshot.error);
+                    if (snapshot.hasData && snapshot.data != null) {
+                      int unread = snapshot.data!
+                          .where((element) => element.read == false)
+                          .length;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Text(
+                            "You have",
+                            style: GoogleFonts.openSans(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 20,
+                                color: Colors.white),
+                          ),
+                          Text(
+                            "$unread notifications",
+                            style: GoogleFonts.openSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 20,
+                                color: Colors.white),
+                          ),
+                        ],
+                      );
+                    } else if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    } else {
+                      print("state : " + snapshot.connectionState.toString());
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Text(
+                            "An error occured.",
+                            style: GoogleFonts.openSans(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 20,
+                                color: Colors.white),
+                          ),
+                        ],
+                      );
+                    }
+                  }),
             ),
           ),
           Container(
@@ -134,6 +170,8 @@ class _HomeWidgetState extends State<HomeWidget> {
                         .removeWhere((element) => element.registered == false);
                     snapshot.data!.removeWhere(
                         (element) => element.endDate.isBefore(DateTime.now()));
+                    snapshot.data!
+                        .sort((a, b) => a.endDate.compareTo(b.endDate));
                     return Padding(
                       padding: const EdgeInsets.only(left: 15, right: 15),
                       child: Container(
@@ -163,8 +201,8 @@ class _HomeWidgetState extends State<HomeWidget> {
                                     width: 46,
                                     child: Align(
                                       alignment: Alignment.centerLeft,
-                                      child: Image.asset(
-                                        "assets/project-icon.png",
+                                      child: SvgPicture.asset(
+                                        "assets/project-icon.svg",
                                         width: 32,
                                         height: 32,
                                       ),
