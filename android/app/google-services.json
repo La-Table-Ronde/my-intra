@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "60039471738",
+    "project_id": "my-intra",
+    "storage_bucket": "my-intra.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:60039471738:android:69c2e2f01ba757a30511c3",
+        "android_client_info": {
+          "package_name": "com.adamlbs.myintra"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "60039471738-pvp7mq4met29n14l72po6cnan0v2168v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1VQxGToEjWJ1B_VVnlaKj7KoEtKexe-c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "60039471738-pvp7mq4met29n14l72po6cnan0v2168v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

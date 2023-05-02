@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:my_intra/home_widget.dart';
@@ -12,6 +13,8 @@ import 'package:my_intra/notifications_widget.dart';
 import 'package:my_intra/onboarding.dart';
 import 'package:my_intra/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'globals.dart' as globals;
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -63,6 +66,11 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
   void initState() {
     projects = getProjectData();
     notifications = getNotifications();
+    globals.flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestPermission();
+
     // TODO: implement initState
     super.initState();
   }
@@ -73,6 +81,10 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
       future: getProfileData(),
       builder: (context, AsyncSnapshot<Profile> res) {
         if (res.hasError) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
           return Text("Une erreur s'est produite hmm ${res.error}");
         }
         if (res.hasData && res.data != null) {
@@ -148,6 +160,10 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                               ],
                               currentIndex: _selectedIndex.value,
                               onTap: (index) {
+                                globals.flutterLocalNotificationsPlugin
+                                    .resolvePlatformSpecificImplementation<
+                                        AndroidFlutterLocalNotificationsPlugin>()!
+                                    .requestPermission();
                                 setState(() {
                                   firstRun = false;
                                   _selectedIndex.value = index;
@@ -200,7 +216,9 @@ Future<bool> checkUserLoggedIn() async {
   final cookieValue = user;
   final request = http.Request('GET', Uri.parse(url));
   request.headers['cookie'] = "user=$cookieValue";
+  print(cookieValue);
   final response = await client.send(request);
+  print(response.statusCode);
   if (response.statusCode != 200) {
     client.close();
     return false;
@@ -294,6 +312,11 @@ Future<List<Projects>> getProjectData() async {
   List<Projects> list = [];
   for (var project in projects) {
     String titleLink = project['title_link'];
+    String titleLinkSave = project['title_link'];
+    titleLinkSave = titleLinkSave.replaceAll(r'\/', '/');
+    titleLinkSave = titleLinkSave.replaceAll('\\', '');
+    titleLinkSave =
+        "https://intra.epitech.eu${titleLinkSave}project/register?format=json";
     titleLink = titleLink.replaceAll(r'\/', '/');
     titleLink = titleLink.replaceAll('\\', '');
     titleLink = 'https://intra.epitech.eu${titleLink}project/?format=json';
@@ -309,11 +332,14 @@ Future<List<Projects>> getProjectData() async {
     final responseString =
         utf8.decode(responseBytes.expand((byte) => byte).toList());
     final value = jsonDecode(responseString);
+    String registerUrl = "intra.epitech.eu$titleLinkSave/project/register";
     list.add(Projects(
         title: value['title'].toString(),
+        registrable: !value['closed'],
         endDate: DateTime.parse(value['end']),
         module: value['module_title'].toString(),
-        registered: value['user_project_status'] != null ? true : false));
+        registered: value['user_project_status'] != null ? true : false,
+        registerUrl: titleLinkSave));
   }
   return list;
 }

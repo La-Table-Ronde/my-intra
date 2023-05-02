@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_intra/main.dart';
 import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
@@ -75,6 +76,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             padding: const EdgeInsets.only(top: 14, bottom: 5),
             child: Container(
               width: double.infinity,
+              constraints: BoxConstraints(maxHeight: 140),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                   color: const Color(0xFF7293E1),
@@ -89,31 +91,44 @@ class _HomeWidgetState extends State<HomeWidget> {
                       int unread = snapshot.data!
                           .where((element) => element.read == false)
                           .length;
-                      return Column(
+                      return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "You have",
-                            style: GoogleFonts.openSans(
-                                fontWeight: FontWeight.w400,
-                                fontSize: 20,
-                                color: Colors.white),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Text(
+                                "You have",
+                                style: GoogleFonts.openSans(
+                                    fontWeight: FontWeight.w400,
+                                    fontSize: 20,
+                                    color: Colors.white),
+                              ),
+                              Text(
+                                "$unread notifications",
+                                style: GoogleFonts.openSans(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 20,
+                                    color: Colors.white),
+                              ),
+                            ],
                           ),
-                          Text(
-                            "$unread notifications",
-                            style: GoogleFonts.openSans(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 20,
-                                color: Colors.white),
-                          ),
+                          SvgPicture.asset(unread != 0
+                              ? "assets/bob-awake.svg"
+                              : "assets/bob-sleeping.svg")
                         ],
                       );
                     } else if (snapshot.connectionState ==
                         ConnectionState.waiting) {
                       return CircularProgressIndicator();
                     } else {
-                      print("state : " + snapshot.connectionState.toString());
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginIntra()),
+                      );
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.max,
@@ -173,12 +188,12 @@ class _HomeWidgetState extends State<HomeWidget> {
                       snapshot.hasData == false) {
                     return CircularProgressIndicator();
                   } else if (snapshot.hasData && snapshot.data != null) {
-                    snapshot.data!
+                    final newList = List.from(snapshot.data!);
+                    newList
                         .removeWhere((element) => element.registered == false);
-                    snapshot.data!.removeWhere(
+                    newList.removeWhere(
                         (element) => element.endDate.isBefore(DateTime.now()));
-                    snapshot.data!
-                        .sort((a, b) => a.endDate.compareTo(b.endDate));
+                    newList.sort((a, b) => a.endDate.compareTo(b.endDate));
                     return Padding(
                       padding: const EdgeInsets.only(left: 15, right: 15),
                       child: Container(
@@ -186,7 +201,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                         child: ListView.separated(
                           physics: NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
-                          itemCount: snapshot.data!.length,
+                          itemCount: newList.length,
                           itemBuilder: (context, index) {
                             return Container(
                               padding: EdgeInsets.only(
@@ -216,16 +231,14 @@ class _HomeWidgetState extends State<HomeWidget> {
                                     ),
                                   ),
                                   Expanded(
-                                    child: Center(
-                                      child: Text(
-                                        snapshot.data![index].title,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.start,
-                                        style: GoogleFonts.openSans(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16),
-                                      ),
+                                    child: Text(
+                                      newList[index].title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.start,
+                                      style: GoogleFonts.openSans(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16),
                                     ),
                                   ),
                                   Column(
@@ -242,12 +255,20 @@ class _HomeWidgetState extends State<HomeWidget> {
                                             fontSize: 12),
                                       ),
                                       Text(
-                                        snapshot.data![index].endDate
+                                        newList[index]
+                                                    .endDate
                                                     .difference(DateTime.now())
                                                     .inDays >
                                                 1
-                                            ? "${snapshot.data![index].endDate.difference(DateTime.now()).inDays} days"
-                                            : "${snapshot.data![index].endDate.difference(DateTime.now()).inDays} day",
+                                            ? "${newList[index].endDate.difference(DateTime.now()).inDays} days"
+                                            : newList[index]
+                                                        .endDate
+                                                        .difference(
+                                                            DateTime.now())
+                                                        .inDays ==
+                                                    0
+                                                ? "Today"
+                                                : "${newList[index].endDate.difference(DateTime.now()).inDays} day",
                                         style: GoogleFonts.openSans(
                                             fontWeight: FontWeight.w700,
                                             color: Color(0xFF7293E1),

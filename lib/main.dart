@@ -2,7 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // ignore_for_file: public_member_api_docs
 
 import 'package:my_intra/home.dart';
@@ -16,14 +19,76 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 // Import for iOS features.
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
+import 'package:workmanager/workmanager.dart';
+
+import 'globals.dart' as globals;
 // #enddocregion platform_imports
 
-void main() => runApp(MaterialApp(
-    // standard dark theme
-    darkTheme: ThemeData.dark(),
-    themeMode: ThemeMode.system,
-    debugShowCheckedModeBanner: false,
-    home: HomePage()));
+@pragma(
+    'vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    print("task : " + task);
+    if (task == "check-connection-task") {
+      bool login = await checkUserLoggedIn();
+      if (!login) {
+        final prefs = await SharedPreferences.getInstance();
+        String? date = prefs.getString("date-login-notif");
+        if (date != null) {
+          DateTime fulldate = DateTime.now().subtract(Duration(days: 2));
+          DateTime now = DateTime.now();
+          DateTime lastSent = DateTime.parse(date);
+          if (!lastSent.isAfter(fulldate)) {
+            return Future.value(true);
+          }
+        } else {
+          prefs.setString("date-login-notif", DateTime.now().toString());
+        }
+        const AndroidNotificationDetails androidNotificationDetails =
+            AndroidNotificationDetails('background', 'Background Notifications',
+                channelDescription: 'Notifications in the background',
+                importance: Importance.max,
+                priority: Priority.high,
+                ticker: 'ticker');
+        const NotificationDetails notificationDetails =
+            NotificationDetails(android: androidNotificationDetails);
+        await globals.flutterLocalNotificationsPlugin.show(
+            0,
+            'You have been logged out',
+            'Click on the notification to reconnect yourself to the app.',
+            notificationDetails,
+            payload: 'login-notif');
+      }
+    }
+    return Future.value(true);
+  });
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  final fcmToken = await FirebaseMessaging.instance.getToken();
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('notif');
+  final InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+  await globals.flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: onDidReceiveNotificationResponse);
+  Workmanager().initialize(
+      callbackDispatcher, // The top level function, aka callbackDispatcher
+      isInDebugMode:
+          true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+      );
+  Workmanager().registerOneOffTask("task-identifier", "simpleTask");
+  print(fcmToken);
+  runApp(MaterialApp(
+      // standard dark theme
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.system,
+      debugShowCheckedModeBanner: false,
+      home: HomePage()));
+}
 
 String? _user;
 
@@ -77,6 +142,10 @@ class _LoginIntraState extends State<LoginIntra> {
                 final prefs = await SharedPreferences.getInstance();
                 prefs.setString("user", item.value);
                 _user = item.value;
+                Workmanager().registerPeriodicTask(
+                  "check-connection",
+                  "check-connection-task",
+                );
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -157,4 +226,8 @@ class NavigationControls extends StatelessWidget {
       children: const <Widget>[],
     );
   }
+}
+
+void onDidReceiveNotificationResponse(NotificationResponse details) {
+  print(details);
 }

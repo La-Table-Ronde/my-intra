@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:html/parser.dart' show parseFragment;
+import 'package:http/http.dart' as http;
 import 'package:my_intra/home.dart';
 import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
@@ -17,7 +18,7 @@ class NotificationsWidget extends StatefulWidget {
       this.projects,
       required this.data})
       : super(key: key);
-  final Future<List<Projects>>? projects;
+  Future<List<Projects>>? projects;
   final Profile data;
   Future<List<Notifications>>? notifications;
 
@@ -114,21 +115,17 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                                     ),
                                   ),
                                   Expanded(
-                                    child: Center(
-                                      child: Text(
-                                        parseFragment(
-                                                snapshot.data![index].title)
-                                            .text!,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        textAlign: TextAlign.start,
-                                        style: GoogleFonts.openSans(
-                                            fontWeight:
-                                                snapshot.data![index].read
-                                                    ? FontWeight.w400
-                                                    : FontWeight.w700,
-                                            fontSize: 12),
-                                      ),
+                                    child: Text(
+                                      parseFragment(snapshot.data![index].title)
+                                          .text!,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.start,
+                                      style: GoogleFonts.openSans(
+                                          fontWeight: snapshot.data![index].read
+                                              ? FontWeight.w400
+                                              : FontWeight.w700,
+                                          fontSize: 12),
                                     ),
                                   ),
                                 ],
@@ -165,8 +162,9 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                     snapshot.hasData == false) {
                   return const CircularProgressIndicator();
                 } else if (snapshot.hasData && snapshot.data != null) {
-                  snapshot.data!
-                      .removeWhere((element) => element.registered == false);
+                  snapshot.data!.removeWhere((element) =>
+                      element.registrable == false &&
+                      element.registered == false);
                   snapshot.data!.removeWhere(
                       (element) => element.endDate.isBefore(DateTime.now()));
                   snapshot.data!.sort((a, b) => a.endDate.compareTo(b.endDate));
@@ -218,32 +216,79 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                                     ),
                                   ),
                                 ),
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "End:",
-                                      textAlign: TextAlign.start,
-                                      style: GoogleFonts.openSans(
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 12),
+                                if (snapshot.data![index].registered)
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "End:",
+                                        textAlign: TextAlign.start,
+                                        style: GoogleFonts.openSans(
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 12),
+                                      ),
+                                      Text(
+                                        snapshot.data![index].endDate
+                                                    .difference(DateTime.now())
+                                                    .inDays >
+                                                1
+                                            ? "${snapshot.data![index].endDate.difference(DateTime.now()).inDays} days"
+                                            : "${snapshot.data![index].endDate.difference(DateTime.now()).inDays} day",
+                                        style: GoogleFonts.openSans(
+                                            fontWeight: FontWeight.w700,
+                                            color: const Color(0xFF7293E1),
+                                            fontSize: 12),
+                                      )
+                                    ],
+                                  ),
+                                if (snapshot.data![index].registered == false &&
+                                    snapshot.data![index].registrable)
+                                  InkWell(
+                                    child: Container(
+                                      width: 90,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(10)),
+                                        border: Border.all(
+                                            width: 2, color: Color(0xFFC8D1E6)),
+                                        color: Color(0xFF7293E1),
+                                      ),
+                                      child: Center(
+                                          child: Text(
+                                        "Register",
+                                        style: GoogleFonts.openSans(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 12,
+                                            color: Colors.white),
+                                      )),
                                     ),
-                                    Text(
-                                      snapshot.data![index].endDate
-                                                  .difference(DateTime.now())
-                                                  .inDays >
-                                              1
-                                          ? "${snapshot.data![index].endDate.difference(DateTime.now()).inDays} days"
-                                          : "${snapshot.data![index].endDate.difference(DateTime.now()).inDays} day",
-                                      style: GoogleFonts.openSans(
-                                          fontWeight: FontWeight.w700,
-                                          color: const Color(0xFF7293E1),
-                                          fontSize: 12),
-                                    )
-                                  ],
-                                ),
+                                    onTap: () async {
+                                      bool result = await registerToProject(
+                                          snapshot.data![index]);
+                                      if (result) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(
+                                                  "You have been registered !")),
+                                        );
+                                        setState(() {
+                                          widget.projects = getProjectData();
+                                        });
+                                      } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content:
+                                                  Text("An error occured.")),
+                                        );
+                                      }
+                                    },
+                                  )
                               ],
                             ),
                           );
@@ -266,4 +311,25 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
       ),
     );
   }
+}
+
+Future<bool> registerToProject(Projects project) async {
+  final prefs = await SharedPreferences.getInstance();
+  String? user = prefs.getString("user");
+  print("url : " + project.registerUrl);
+  if (user == null) {
+    return false;
+  }
+  final url = project.registerUrl;
+  final client = http.Client();
+  final cookieValue = user;
+  final request = http.Request('POST', Uri.parse(url));
+  request.headers['cookie'] = "user=$cookieValue";
+  final response = await client.send(request);
+  if (response.statusCode != 200) {
+    client.close();
+    return false;
+  }
+  client.close();
+  return true;
 }
