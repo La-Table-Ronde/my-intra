@@ -12,11 +12,9 @@ import 'package:my_intra/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_cookie_manager/webview_cookie_manager.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-
 // #docregion platform_imports
 // Import for Android features.
 import 'package:webview_flutter_android/webview_flutter_android.dart';
-
 // Import for iOS features.
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:workmanager/workmanager.dart';
@@ -78,7 +76,7 @@ Future<void> main() async {
   Workmanager().initialize(
       callbackDispatcher, // The top level function, aka callbackDispatcher
       isInDebugMode:
-          true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+          false // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
       );
   Workmanager().registerOneOffTask("task-identifier", "simpleTask");
   print(fcmToken);
