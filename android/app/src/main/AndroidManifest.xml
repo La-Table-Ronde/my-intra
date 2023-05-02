@@ -2,7 +2,7 @@
     package="com.adamlbs.myintra">
 
     <application
-        android:label="my_intra"
+        android:label="My Intra"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <meta-data

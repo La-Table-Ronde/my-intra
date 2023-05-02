@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -79,7 +80,7 @@ Future<void> main() async {
           false // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
       );
   Workmanager().registerOneOffTask("task-identifier", "simpleTask");
-  print(fcmToken);
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   runApp(MaterialApp(
       // standard dark theme
       darkTheme: ThemeData.dark(),

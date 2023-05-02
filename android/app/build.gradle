@@ -34,7 +34,9 @@ android {
     compileSdkVersion 33
     ndkVersion flutter.ndkVersion
     apply plugin: 'com.android.application'
-    apply plugin: 'com.google.gms.google-services'  // Google Services plugin
+    apply plugin: 'com.google.gms.google-services'
+    apply plugin: 'com.google.firebase.firebase-perf'
+    apply plugin: 'com.google.firebase.crashlytics'  // Google Services plugin
 
     compileOptions {
         coreLibraryDesugaringEnabled true
