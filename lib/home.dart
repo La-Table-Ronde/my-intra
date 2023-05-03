@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
+import 'package:in_app_update/in_app_update.dart';
+import 'package:my_intra/calendar_widget.dart';
 import 'package:my_intra/home_widget.dart';
 import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
@@ -13,6 +16,7 @@ import 'package:my_intra/notifications_widget.dart';
 import 'package:my_intra/onboarding.dart';
 import 'package:my_intra/profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
 
 import 'globals.dart' as globals;
 
@@ -70,13 +74,42 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestPermission();
-
+    Workmanager().registerPeriodicTask(
+        "check-notifications", "check-notifications-task",
+        existingWorkPolicy: ExistingWorkPolicy.replace);
     // TODO: implement initState
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    AppUpdateInfo? _updateInfo;
+    GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
+    void showSnack(String text) {
+      if (_scaffoldKey.currentContext != null) {
+        ScaffoldMessenger.of(_scaffoldKey.currentContext!)
+            .showSnackBar(SnackBar(content: Text(text)));
+      }
+    }
+
+    Future<void> checkForUpdate() async {
+      InAppUpdate.checkForUpdate().then((info) {
+        setState(() {
+          _updateInfo = info;
+        });
+      }).catchError((e) {
+        showSnack(e.toString());
+      });
+    }
+
+    if (_updateInfo?.updateAvailability == UpdateAvailability.updateAvailable &&
+        _updateInfo!.availableVersionCode!.isEven) {
+      InAppUpdate.performImmediateUpdate()
+          .catchError((e) => showSnack(e.toString()));
+    } else if (_updateInfo?.updateAvailability ==
+        UpdateAvailability.updateAvailable) {
+      InAppUpdate.startFlexibleUpdate();
+    }
     return FutureBuilder(
       future: getProfileData(),
       builder: (context, AsyncSnapshot<Profile> res) {
@@ -91,10 +124,10 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
           firstRun
               ? displayedWidget = HomeWidget(
             data: res.data!,
-                  projects: projects,
-                  notifications: notifications,
-                  index: _selectedIndex,
-                )
+            projects: projects,
+            notifications: notifications,
+            index: _selectedIndex,
+          )
               : 0;
           return SafeArea(
             child: ValueListenableBuilder<int>(
@@ -118,16 +151,16 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                               border: Border.all(
                                   color: const Color(0xFFC8D1E6), width: 3),
                               borderRadius:
-                                  const BorderRadius.all(Radius.circular(20))),
+                              const BorderRadius.all(Radius.circular(20))),
                           child: ClipRRect(
                             borderRadius:
-                                const BorderRadius.all(Radius.circular(20)),
+                            const BorderRadius.all(Radius.circular(20)),
                             child: BottomNavigationBar(
                               type: BottomNavigationBarType.fixed,
                               showSelectedLabels: false,
                               showUnselectedLabels: false,
                               selectedIconTheme:
-                                  const IconThemeData(color: Color(0xFF7293E1)),
+                              const IconThemeData(color: Color(0xFF7293E1)),
                               items: [
                                 BottomNavigationBarItem(
                                     icon: SvgPicture.asset(
@@ -162,12 +195,15 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                               onTap: (index) {
                                 globals.flutterLocalNotificationsPlugin
                                     .resolvePlatformSpecificImplementation<
-                                        AndroidFlutterLocalNotificationsPlugin>()!
+                                    AndroidFlutterLocalNotificationsPlugin>()!
                                     .requestPermission();
                                 setState(() {
                                   firstRun = false;
                                   _selectedIndex.value = index;
                                   displayedWidget = null;
+                                  if (index == 1) {
+                                    displayedWidget = CalendarWidget();
+                                  }
                                   if (index == 3) {
                                     displayedWidget =
                                         ProfilePage(data: res.data!);
@@ -216,9 +252,11 @@ Future<bool> checkUserLoggedIn() async {
   final cookieValue = user;
   final request = http.Request('GET', Uri.parse(url));
   request.headers['cookie'] = "user=$cookieValue";
-  print(cookieValue);
+  final metric =
+      FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
+  await metric.start();
   final response = await client.send(request);
-  print(response.statusCode);
+  await metric.stop();
   if (response.statusCode != 200) {
     client.close();
     return false;
@@ -268,7 +306,13 @@ Future<Profile> getProfileData() async {
   final cookieValue = user;
   final request = http.Request('GET', Uri.parse(url));
   request.headers['cookie'] = "user=$cookieValue";
+  final metric =
+      FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
+
+  await metric.start();
+
   final response = await client.send(request);
+  await metric.stop();
   if (response.statusCode != 200) {
     return Future.error("Error${response.statusCode}");
   }
@@ -300,7 +344,11 @@ Future<List<Projects>> getProjectData() async {
   final cookieValue = user;
   final request = http.Request('GET', Uri.parse(url));
   request.headers['cookie'] = "user=$cookieValue";
+  final metric =
+      FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
+  await metric.start();
   final response = await client.send(request);
+  await metric.stop();
   if (response.statusCode != 200) {
     return Future.error("Error${response.statusCode}");
   }
@@ -322,7 +370,11 @@ Future<List<Projects>> getProjectData() async {
     titleLink = 'https://intra.epitech.eu${titleLink}project/?format=json';
     final request = http.Request('GET', Uri.parse(titleLink));
     request.headers['cookie'] = "user=$cookieValue";
+    final metric =
+        FirebasePerformance.instance.newHttpMetric(titleLink, HttpMethod.Get);
+    await metric.start();
     final response = await client.send(request);
+    await metric.stop();
     print(response.statusCode);
     if (response.statusCode != 200) {
       print("err");
@@ -352,7 +404,11 @@ Future<List<Notifications>> getNotifications() async {
   final cookieValue = user;
   final request = http.Request('GET', Uri.parse(url));
   request.headers['cookie'] = "user=$cookieValue";
+  final metric =
+      FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
+  await metric.start();
   final response = await client.send(request);
+  await metric.stop();
   if (response.statusCode != 200) {
     return Future.error("Error${response.statusCode}");
   }
@@ -373,7 +429,8 @@ Future<List<Notifications>> getNotifications() async {
         id: notification['id'],
         title: notification['title'],
         read: false,
-        date: DateTime.parse(notification['date']));
+        date: DateTime.parse(notification['date']),
+        notifSent: false);
     bool alreadyExists = false;
     for (var obj in list) {
       if (obj.id == newNotif.id) {

@@ -1,11 +1,13 @@
 import 'dart:convert';
 
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:html/parser.dart' show parseFragment;
 import 'package:http/http.dart' as http;
 import 'package:my_intra/home.dart';
+import 'package:my_intra/main.dart';
 import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
@@ -29,7 +31,6 @@ class NotificationsWidget extends StatefulWidget {
 class _NotificationsWidgetState extends State<NotificationsWidget> {
   @override
   void initState() {
-    print("ici");
     super.initState();
   }
 
@@ -71,76 +72,83 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
             ),
           ),
           Flexible(
-            child: SingleChildScrollView(
-              child: FutureBuilder(
-                future: widget.notifications,
-                builder:
-                    (context, AsyncSnapshot<List<Notifications>> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
-                  } else if (snapshot.hasData && snapshot.data != null) {
-                    return ListView.separated(
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemBuilder: (context, index) {
-                          print(snapshot.data![index].read);
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 15, right: 15),
-                            child: Container(
-                              padding: const EdgeInsets.only(
-                                  left: 9, right: 9, top: 10, bottom: 10),
-                              constraints: const BoxConstraints(
-                                  minHeight: 52, minWidth: 322),
-                              decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(10)),
-                                  border: Border.all(
-                                      width: 2,
-                                      color: const Color(0xFFC8D1E6))),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 46,
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: SvgPicture.asset(
-                                        "assets/info-icon.svg",
-                                        width: 32,
-                                        height: 32,
+            child: RefreshIndicator(
+              onRefresh: _refreshNotifs,
+              child: SingleChildScrollView(
+                child: FutureBuilder(
+                  future: widget.notifications,
+                  builder:
+                      (context, AsyncSnapshot<List<Notifications>> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    } else if (snapshot.hasData && snapshot.data != null) {
+                      setAllNotifsToRead();
+                      return ListView.separated(
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemBuilder: (context, index) {
+                            print(snapshot.data![index].read);
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 15, right: 15),
+                              child: Container(
+                                padding: const EdgeInsets.only(
+                                    left: 9, right: 9, top: 10, bottom: 10),
+                                constraints: const BoxConstraints(
+                                    minHeight: 52, minWidth: 322),
+                                decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10)),
+                                    border: Border.all(
+                                        width: 2,
+                                        color: const Color(0xFFC8D1E6))),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 46,
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: SvgPicture.asset(
+                                          "assets/info-icon.svg",
+                                          width: 32,
+                                          height: 32,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      parseFragment(snapshot.data![index].title)
-                                          .text!,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.start,
-                                      style: GoogleFonts.openSans(
-                                          fontWeight: snapshot.data![index].read
-                                              ? FontWeight.w400
-                                              : FontWeight.w700,
-                                          fontSize: 12),
+                                    Expanded(
+                                      child: Text(
+                                        parseFragment(
+                                                snapshot.data![index].title)
+                                            .text!,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.start,
+                                        style: GoogleFonts.openSans(
+                                            fontWeight:
+                                                snapshot.data![index].read
+                                                    ? FontWeight.w400
+                                                    : FontWeight.w700,
+                                            fontSize: 12),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                        separatorBuilder: (BuildContext context, int index) {
-                          return const SizedBox(height: 10);
-                        },
-                        itemCount: snapshot.data!.length);
-                  } else {
-                    return const Text("An error happened.");
-                  }
-                },
+                            );
+                          },
+                          separatorBuilder: (BuildContext context, int index) {
+                            return const SizedBox(height: 10);
+                          },
+                          itemCount: snapshot.data!.length);
+                    } else {
+                      return const Text("An error happened.");
+                    }
+                  },
+                ),
               ),
             ),
           ),
@@ -311,6 +319,14 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
       ),
     );
   }
+
+  Future<void> _refreshNotifs() async {
+    final notifs = await getNotifications();
+    setState(() {
+      widget.notifications =
+          Future.delayed(Duration(microseconds: 1), () => notifs);
+    });
+  }
 }
 
 Future<bool> registerToProject(Projects project) async {
@@ -321,11 +337,15 @@ Future<bool> registerToProject(Projects project) async {
     return false;
   }
   final url = project.registerUrl;
+  final metric =
+      FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
+  await metric.start();
   final client = http.Client();
   final cookieValue = user;
   final request = http.Request('POST', Uri.parse(url));
   request.headers['cookie'] = "user=$cookieValue";
   final response = await client.send(request);
+  await metric.stop();
   if (response.statusCode != 200) {
     client.close();
     return false;

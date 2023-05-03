@@ -2,14 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:convert';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:html/parser.dart';
 // ignore_for_file: public_member_api_docs
 
 import 'package:my_intra/home.dart';
+import 'package:my_intra/model/notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_cookie_manager/webview_cookie_manager.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -27,9 +31,33 @@ import 'globals.dart' as globals;
     'vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    print("task : " + task);
+    await Firebase.initializeApp();
+    if (task == "check-notifications-task") {
+      final notifs = await getNotifications();
+      for (var notification in notifs) {
+        if (notification.read == false && notification.notifSent == false) {
+          const AndroidNotificationDetails androidNotificationDetails =
+              AndroidNotificationDetails('alerts', 'Alerts Notifications',
+                  channelDescription:
+                      'Notifications for the alerts of the Intra',
+                  importance: Importance.defaultImportance,
+                  priority: Priority.defaultPriority,
+                  ticker: 'ticker');
+          const NotificationDetails notificationDetails =
+              NotificationDetails(android: androidNotificationDetails);
+          await globals.flutterLocalNotificationsPlugin.show(
+              int.parse(notification.id),
+              'New notification !',
+              parseFragment(notification.title).text,
+              notificationDetails,
+              payload: 'alert-notif');
+        }
+      }
+      setAllNotifsToSent();
+    }
     if (task == "check-connection-task") {
       bool login = await checkUserLoggedIn();
+      print("login ? " + login.toString());
       if (!login) {
         final prefs = await SharedPreferences.getInstance();
         String? date = prefs.getString("date-login-notif");
@@ -79,7 +107,6 @@ Future<void> main() async {
       isInDebugMode:
           false // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
       );
-  Workmanager().registerOneOffTask("task-identifier", "simpleTask");
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   runApp(MaterialApp(
       // standard dark theme
@@ -145,7 +172,7 @@ class _LoginIntraState extends State<LoginIntra> {
                   "check-connection",
                   "check-connection-task",
                 );
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                       builder: (context) => const HomePageLoggedIn()),
@@ -229,4 +256,44 @@ class NavigationControls extends StatelessWidget {
 
 void onDidReceiveNotificationResponse(NotificationResponse details) {
   print(details);
+}
+
+Future<void> setAllNotifsToSent() async {
+  final prefs = await SharedPreferences.getInstance();
+  List<Notifications> list = [];
+  String? data = prefs.getString("notifications");
+  if (data != null) {
+    final jsonList = json.decode(data) as List<dynamic>;
+    print("data list : " + json.decode(data).toString());
+    list = jsonList.map((jsonObj) => Notifications.fromJson(jsonObj)).toList();
+  }
+  for (var notification in list) {
+    notification.notifSent = true;
+  }
+  List<Map<String, dynamic>> mapList = [];
+  for (Notifications obj in list) {
+    mapList.add(obj.toJson());
+  }
+  final jsonValue = json.encode(mapList);
+  await prefs.setString("notifications", jsonValue);
+}
+
+Future<void> setAllNotifsToRead() async {
+  final prefs = await SharedPreferences.getInstance();
+  List<Notifications> list = [];
+  String? data = prefs.getString("notifications");
+  if (data != null) {
+    final jsonList = json.decode(data) as List<dynamic>;
+    print("data list : " + json.decode(data).toString());
+    list = jsonList.map((jsonObj) => Notifications.fromJson(jsonObj)).toList();
+  }
+  for (var notification in list) {
+    notification.read = true;
+  }
+  List<Map<String, dynamic>> mapList = [];
+  for (Notifications obj in list) {
+    mapList.add(obj.toJson());
+  }
+  final jsonValue = json.encode(mapList);
+  await prefs.setString("notifications", jsonValue);
 }
