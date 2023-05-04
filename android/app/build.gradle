@@ -1,3 +1,4 @@
+
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
@@ -29,10 +30,11 @@ if (flutterVersionName == null) {
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-
 android {
+    android.buildTypes.release.ndk.debugSymbolLevel = 'full'
     compileSdkVersion 33
     ndkVersion flutter.ndkVersion
+
     apply plugin: 'com.android.application'
     apply plugin: 'com.google.gms.google-services'
     apply plugin: 'com.google.firebase.firebase-perf'
@@ -61,6 +63,9 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        ndk {
+            debugSymbolLevel 'FULL'
+        }
     }
     signingConfigs {
         release {

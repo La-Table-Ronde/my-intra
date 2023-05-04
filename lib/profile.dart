@@ -4,6 +4,8 @@ import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/styleText.dart';
 import 'package:pie_chart/pie_chart.dart';
 
+import 'globals.dart' as globals;
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key, required this.data}) : super(key: key);
   final Profile data;
@@ -114,17 +116,20 @@ class _ProfilePageState extends State<ProfilePage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Center(
-                          child: ClipRRect(
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(22)),
-                            child: Image.network(
-                              'https://intra.epitech.eu/file/userprofil/profilview/${widget.data.email}.png',
-                              headers: {'Cookie': 'user=${widget.data.cookie}'},
-                              scale: 1.5,
+                        if (globals.adminMode == false)
+                          Center(
+                            child: ClipRRect(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(22)),
+                              child: Image.network(
+                                'https://intra.epitech.eu/file/userprofil/profilview/${widget.data.email}.png',
+                                headers: {
+                                  'Cookie': 'user=${widget.data.cookie}'
+                                },
+                                scale: 1.5,
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ],

@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> {
           future: checkUserLoggedIn(),
           builder: (context, AsyncSnapshot<bool> res) {
             if (res.hasData == false) {
-              return const CircularProgressIndicator();
+              return Center(child: const CircularProgressIndicator());
             }
             if (res.hasError == true || res.hasData && res.data == false) {
               return const OnboardingWidget();
@@ -65,9 +65,29 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
   bool firstRun = true;
   Future<List<Projects>>? projects;
   Future<List<Notifications>>? notifications;
+  AppUpdateInfo? _updateInfo;
+  GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
+
+  void showSnack(String text) {
+    if (_scaffoldKey.currentContext != null) {
+      ScaffoldMessenger.of(_scaffoldKey.currentContext!)
+          .showSnackBar(SnackBar(content: Text(text)));
+    }
+  }
+
+  Future<void> checkForUpdate() async {
+    InAppUpdate.checkForUpdate().then((info) {
+      setState(() {
+        _updateInfo = info;
+      });
+    }).catchError((e) {
+      showSnack(e.toString());
+    });
+  }
 
   @override
   void initState() {
+    checkForUpdate();
     projects = getProjectData();
     notifications = getNotifications();
     globals.flutterLocalNotificationsPlugin
@@ -83,25 +103,6 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
 
   @override
   Widget build(BuildContext context) {
-    AppUpdateInfo? _updateInfo;
-    GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
-    void showSnack(String text) {
-      if (_scaffoldKey.currentContext != null) {
-        ScaffoldMessenger.of(_scaffoldKey.currentContext!)
-            .showSnackBar(SnackBar(content: Text(text)));
-      }
-    }
-
-    Future<void> checkForUpdate() async {
-      InAppUpdate.checkForUpdate().then((info) {
-        setState(() {
-          _updateInfo = info;
-        });
-      }).catchError((e) {
-        showSnack(e.toString());
-      });
-    }
-
     if (_updateInfo?.updateAvailability == UpdateAvailability.updateAvailable &&
         _updateInfo!.availableVersionCode!.isEven) {
       InAppUpdate.performImmediateUpdate()
@@ -123,11 +124,11 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
         if (res.hasData && res.data != null) {
           firstRun
               ? displayedWidget = HomeWidget(
-            data: res.data!,
-            projects: projects,
-            notifications: notifications,
-            index: _selectedIndex,
-          )
+                  data: res.data!,
+                  projects: projects,
+                  notifications: notifications,
+                  index: _selectedIndex,
+                )
               : 0;
           return SafeArea(
             child: ValueListenableBuilder<int>(
@@ -151,16 +152,16 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                               border: Border.all(
                                   color: const Color(0xFFC8D1E6), width: 3),
                               borderRadius:
-                              const BorderRadius.all(Radius.circular(20))),
+                                  const BorderRadius.all(Radius.circular(20))),
                           child: ClipRRect(
                             borderRadius:
-                            const BorderRadius.all(Radius.circular(20)),
+                                const BorderRadius.all(Radius.circular(20)),
                             child: BottomNavigationBar(
                               type: BottomNavigationBarType.fixed,
                               showSelectedLabels: false,
                               showUnselectedLabels: false,
                               selectedIconTheme:
-                              const IconThemeData(color: Color(0xFF7293E1)),
+                                  const IconThemeData(color: Color(0xFF7293E1)),
                               items: [
                                 BottomNavigationBarItem(
                                     icon: SvgPicture.asset(
@@ -195,7 +196,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                               onTap: (index) {
                                 globals.flutterLocalNotificationsPlugin
                                     .resolvePlatformSpecificImplementation<
-                                    AndroidFlutterLocalNotificationsPlugin>()!
+                                        AndroidFlutterLocalNotificationsPlugin>()!
                                     .requestPermission();
                                 setState(() {
                                   firstRun = false;
@@ -234,7 +235,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                 }),
           );
         } else {
-          return const CircularProgressIndicator();
+          return Center(child: const CircularProgressIndicator());
         }
       },
     );
@@ -299,6 +300,21 @@ Future<void> showDialogConnexionIntra(BuildContext context) async {
 }
 
 Future<Profile> getProfileData() async {
+  if (globals.adminMode) {
+    return Profile(
+        gpa: "4.0",
+        name: "Elaoumari",
+        firstname: "Adam",
+        semester: "B4",
+        city: "Marseille",
+        activeLogTime: "10",
+        idleLogTime: "15",
+        fullCredits: "150",
+        email: "adam.elaoumari@epitech.eu",
+        cookie: "0",
+        promo: "MAR",
+        studentyear: "2");
+  }
   final prefs = await SharedPreferences.getInstance();
   String? user = prefs.getString("user");
   const url = 'https://intra.epitech.eu/user/?format=json';
@@ -318,7 +334,7 @@ Future<Profile> getProfileData() async {
   }
   final responseBytes = await response.stream.toList();
   final responseString =
-      utf8.decode(responseBytes.expand((byte) => byte).toList());
+  utf8.decode(responseBytes.expand((byte) => byte).toList());
   final value = jsonDecode(responseString);
   print(value);
   return Profile(
@@ -337,6 +353,17 @@ Future<Profile> getProfileData() async {
 }
 
 Future<List<Projects>> getProjectData() async {
+  if (globals.adminMode) {
+    List<Projects> list = [];
+    list.add(Projects(
+        title: "Travailler",
+        endDate: DateTime.now().add(Duration(days: 12)),
+        module: "Test",
+        registered: true,
+        registrable: false,
+        registerUrl: "gmail.com"));
+    return list;
+  }
   final prefs = await SharedPreferences.getInstance();
   String? user = prefs.getString("user");
   const url = 'https://intra.epitech.eu/?format=json';
@@ -354,7 +381,7 @@ Future<List<Projects>> getProjectData() async {
   }
   final responseBytes = await response.stream.toList();
   final responseString =
-      utf8.decode(responseBytes.expand((byte) => byte).toList());
+  utf8.decode(responseBytes.expand((byte) => byte).toList());
   final value = jsonDecode(responseString);
   List<dynamic> projects = value['board']['projets'];
   List<Projects> list = [];
@@ -364,14 +391,14 @@ Future<List<Projects>> getProjectData() async {
     titleLinkSave = titleLinkSave.replaceAll(r'\/', '/');
     titleLinkSave = titleLinkSave.replaceAll('\\', '');
     titleLinkSave =
-        "https://intra.epitech.eu${titleLinkSave}project/register?format=json";
+    "https://intra.epitech.eu${titleLinkSave}project/register?format=json";
     titleLink = titleLink.replaceAll(r'\/', '/');
     titleLink = titleLink.replaceAll('\\', '');
     titleLink = 'https://intra.epitech.eu${titleLink}project/?format=json';
     final request = http.Request('GET', Uri.parse(titleLink));
     request.headers['cookie'] = "user=$cookieValue";
     final metric =
-        FirebasePerformance.instance.newHttpMetric(titleLink, HttpMethod.Get);
+    FirebasePerformance.instance.newHttpMetric(titleLink, HttpMethod.Get);
     await metric.start();
     final response = await client.send(request);
     await metric.stop();
@@ -382,7 +409,7 @@ Future<List<Projects>> getProjectData() async {
     }
     final responseBytes = await response.stream.toList();
     final responseString =
-        utf8.decode(responseBytes.expand((byte) => byte).toList());
+    utf8.decode(responseBytes.expand((byte) => byte).toList());
     final value = jsonDecode(responseString);
     String registerUrl = "intra.epitech.eu$titleLinkSave/project/register";
     list.add(Projects(
@@ -397,6 +424,16 @@ Future<List<Projects>> getProjectData() async {
 }
 
 Future<List<Notifications>> getNotifications() async {
+  if (globals.adminMode) {
+    List<Notifications> list = [];
+    list.add(Notifications(
+        id: "0",
+        title: "Florian et Martin les goats",
+        date: DateTime.now(),
+        read: true,
+        notifSent: true));
+    return list;
+  }
   final prefs = await SharedPreferences.getInstance();
   String? user = prefs.getString("user");
   const url = 'https://intra.epitech.eu/?format=json';
@@ -414,7 +451,7 @@ Future<List<Notifications>> getNotifications() async {
   }
   final responseBytes = await response.stream.toList();
   final responseString =
-      utf8.decode(responseBytes.expand((byte) => byte).toList());
+  utf8.decode(responseBytes.expand((byte) => byte).toList());
   final value = jsonDecode(responseString);
   List<dynamic> notifs = value['history'];
   List<Notifications> list = [];

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_update/in_app_update.dart';
+import 'package:my_intra/home.dart';
 import 'package:my_intra/main.dart';
+
+import 'globals.dart' as globals;
 
 class OnboardingWidget extends StatefulWidget {
   const OnboardingWidget({Key? key}) : super(key: key);
@@ -55,6 +58,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
         padding:
             const EdgeInsets.only(top: 92, right: 29, left: 29, bottom: 65),
         child: Column(
+          mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -85,29 +89,61 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                   fontWeight: FontWeight.w700,
                   color: Colors.white),
             ),
-            InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginIntra()),
-                );
-              },
-              child: Container(
-                width: 332,
-                height: 40,
-                decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(53))),
-                child: Center(
-                    child: Text(
+            Column(
+              children: [
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LoginIntra()),
+                    );
+                  },
+                  child: Container(
+                    width: 332,
+                    height: 40,
+                    decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.all(Radius.circular(53))),
+                    child: Center(
+                        child: Text(
                       "Sign In",
                       style: GoogleFonts.openSans(
                           fontSize: 16,
-                      color: const Color(0xFF7293E1),
-                      fontWeight: FontWeight.w700),
-                )),
-              ),
-            )
+                          color: const Color(0xFF7293E1),
+                          fontWeight: FontWeight.w700),
+                    )),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 15),
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: InkWell(
+                      onTap: () {
+                        showLoginAdmin(context).then((value) {
+                          if (value == true) {
+                            globals.adminMode = true;
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const HomePageLoggedIn()),
+                            );
+                          }
+                        });
+                      },
+                      child: Text(
+                        "Admin Access",
+                        style: GoogleFonts.openSans(
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ),
           ],
         ),
       ),
@@ -147,5 +183,69 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
         );
       },
     );
+  }
+
+  Future<bool> showLoginAdmin(BuildContext context) async {
+    await Future.delayed(const Duration(microseconds: 1));
+    final field = TextEditingController();
+    bool res = false;
+    final _formKey = GlobalKey<FormState>();
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Login'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                Form(
+                  key: _formKey,
+                  child: TextFormField(
+                    controller: field,
+                    decoration: const InputDecoration(
+                      icon: Icon(Icons.login),
+                      hintText: 'Login value',
+                      labelText: 'Login',
+                    ),
+                    validator: (String? value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter some text';
+                      }
+                      return null;
+                    },
+                  ),
+                )
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Ok'),
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  // If the form is valid, display a snackbar. In the real world,
+                  // you'd often call a server or save the information in a database.
+                  if (field.text == "CorentinTuCassesLesCouilles") {
+                    res = true;
+                  } else {
+                    res = false;
+                  }
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+    return res;
   }
 }

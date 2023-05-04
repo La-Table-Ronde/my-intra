@@ -7,6 +7,7 @@ import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
 
 import 'consts.dart' as consts;
+import 'globals.dart' as globals;
 
 class HomeWidget extends StatefulWidget {
   const HomeWidget(
@@ -59,16 +60,17 @@ class _HomeWidgetState extends State<HomeWidget> {
                     ),
                   ],
                 ),
-                ClipRRect(
-                  borderRadius: const BorderRadius.all(Radius.circular(15)),
-                  child: Image.network(
-                    'https://intra.epitech.eu/file/userprofil/profilview/${widget.data.email}.png',
-                    width: 64,
-                    height: 64,
-                    headers: {'Cookie': 'user=${widget.data.cookie}'},
-                    scale: 2,
+                if (globals.adminMode == false)
+                  ClipRRect(
+                    borderRadius: const BorderRadius.all(Radius.circular(15)),
+                    child: Image.network(
+                      'https://intra.epitech.eu/file/userprofil/profilview/${widget.data.email}.png',
+                      width: 64,
+                      height: 64,
+                      headers: {'Cookie': 'user=${widget.data.cookie}'},
+                      scale: 2,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -147,7 +149,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             ),
           ),
           InkWell(
-            onTap: () {
+            onTap: () async {
               widget.index.value = 2;
             },
             child: Container(
