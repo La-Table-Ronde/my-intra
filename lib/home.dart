@@ -409,12 +409,14 @@ Future<List<Projects>> getProjectData() async {
     }
     final responseBytes = await response.stream.toList();
     final responseString =
-    utf8.decode(responseBytes.expand((byte) => byte).toList());
+        utf8.decode(responseBytes.expand((byte) => byte).toList());
     final value = jsonDecode(responseString);
-    String registerUrl = "intra.epitech.eu$titleLinkSave/project/register";
+    DateTime startProject = DateTime.parse(value['begin']);
+    bool registrable =
+        !value['closed'] && startProject.isBefore(DateTime.now());
     list.add(Projects(
         title: value['title'].toString(),
-        registrable: !value['closed'],
+        registrable: registrable,
         endDate: DateTime.parse(value['end']),
         module: value['module_title'].toString(),
         registered: value['user_project_status'] != null ? true : false,
