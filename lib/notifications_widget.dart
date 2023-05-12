@@ -49,7 +49,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
           });
         }
       });
-      widget.notifications = getNotifications();
+      widget.notifications = getNotifications(true);
     }
     super.dispose();
   }
@@ -320,7 +320,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
   }
 
   Future<void> _refreshNotifs() async {
-    final notifs = await getNotifications();
+    final notifs = await getNotifications(true);
     setState(() {
       widget.notifications =
           Future.delayed(Duration(microseconds: 1), () => notifs);

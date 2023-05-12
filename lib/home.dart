@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:in_app_update/in_app_update.dart';
 import 'package:my_intra/calendar_widget.dart';
 import 'package:my_intra/home_widget.dart';
+import 'package:my_intra/main.dart';
 import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
@@ -88,8 +89,9 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
   @override
   void initState() {
     checkForUpdate();
+    getNewCookie();
     projects = getProjectData();
-    notifications = getNotifications();
+    notifications = getNotifications(true);
     globals.flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
@@ -438,7 +440,9 @@ Future<List<Projects>> getProjectData() async {
   return list;
 }
 
-Future<List<Notifications>> getNotifications() async {
+Future<List<Notifications>> getNotifications(bool? foreground) async {
+  bool isForeground = false;
+  foreground != null ? isForeground = foreground : 0;
   if (globals.adminMode) {
     List<Notifications> list = [];
     list.add(Notifications(
@@ -481,7 +485,7 @@ Future<List<Notifications>> getNotifications() async {
         title: notification['title'],
         read: false,
         date: DateTime.parse(notification['date']),
-        notifSent: false);
+        notifSent: isForeground ? true : false);
     bool alreadyExists = false;
     for (var obj in list) {
       if (obj.id == newNotif.id) {
