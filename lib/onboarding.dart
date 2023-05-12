@@ -54,97 +54,106 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
     }
     return Scaffold(
       backgroundColor: const Color(0xFF7293E1),
-      body: Padding(
-        padding:
-            const EdgeInsets.only(top: 92, right: 29, left: 29, bottom: 65),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 11),
-                    child: SvgPicture.asset(
-                      "assets/logo.svg",
-                      width: 105,
-                      height: 146,
-                    ),
-                  ),
-                  Text("{ My Intra }",
-                      style: GoogleFonts.openSans(
-                          fontSize: 48,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white)),
-                ],
-              ),
-            ),
-            Text(
-              "A mobile app for Epitech students",
-              textAlign: TextAlign.center,
-              style: GoogleFonts.openSans(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white),
-            ),
-            Column(
+      body: SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height,
+          ),
+          child: Padding(
+            padding:
+                const EdgeInsets.only(top: 92, right: 29, left: 29, bottom: 65),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const LoginIntra()),
-                    );
-                  },
-                  child: Container(
-                    width: 332,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(Radius.circular(53))),
-                    child: Center(
-                        child: Text(
-                      "Sign In",
-                      style: GoogleFonts.openSans(
-                          fontSize: 16,
-                          color: const Color(0xFF7293E1),
-                          fontWeight: FontWeight.w700),
-                    )),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 15),
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: InkWell(
-                      onTap: () {
-                        showLoginAdmin(context).then((value) {
-                          if (value == true) {
-                            globals.adminMode = true;
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const HomePageLoggedIn()),
-                            );
-                          }
-                        });
-                      },
-                      child: Text(
-                        "Admin Access",
-                        style: GoogleFonts.openSans(
-                          decoration: TextDecoration.underline,
+                Container(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 11),
+                        child: SvgPicture.asset(
+                          "assets/logo.svg",
+                          width: 105,
+                          height: 146,
                         ),
                       ),
-                    ),
+                      Text("{ My Intra }",
+                          style: GoogleFonts.openSans(
+                              fontSize: 48,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white)),
+                    ],
                   ),
-                )
+                ),
+                Text(
+                  "A mobile app for Epitech students",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.openSans(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white),
+                ),
+                Column(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginIntra()),
+                        );
+                      },
+                      child: Container(
+                        width: 332,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(53))),
+                        child: Center(
+                            child: Text(
+                          "Sign In",
+                          style: GoogleFonts.openSans(
+                              fontSize: 16,
+                              color: const Color(0xFF7293E1),
+                              fontWeight: FontWeight.w700),
+                        )),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 15),
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: InkWell(
+                          onTap: () {
+                            showLoginAdmin(context).then((value) {
+                              if (value == true) {
+                                globals.adminMode = true;
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const HomePageLoggedIn()),
+                                );
+                              }
+                            });
+                          },
+                          child: Text(
+                            "Admin Access",
+                            style: GoogleFonts.openSans(
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
