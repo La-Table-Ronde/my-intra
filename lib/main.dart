@@ -2,11 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:html/parser.dart';
@@ -33,7 +35,7 @@ void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     await Firebase.initializeApp();
     if (task == "check-notifications-task") {
-      final notifs = await getNotifications();
+      final notifs = await getNotifications(false);
       for (var notification in notifs) {
         if (notification.read == false && notification.notifSent == false) {
           const AndroidNotificationDetails androidNotificationDetails =
@@ -41,6 +43,7 @@ void callbackDispatcher() {
                   channelDescription:
                       'Notifications for the alerts of the Intra',
                   importance: Importance.defaultImportance,
+                  styleInformation: BigTextStyleInformation(''),
                   priority: Priority.defaultPriority,
                   ticker: 'ticker');
           const NotificationDetails notificationDetails =
@@ -56,35 +59,35 @@ void callbackDispatcher() {
       setAllNotifsToSent();
     }
     if (task == "check-connection-task") {
+      await getNewCookie();
       bool login = await checkUserLoggedIn();
-      print("login ? " + login.toString());
       if (!login) {
         final prefs = await SharedPreferences.getInstance();
         String? date = prefs.getString("date-login-notif");
         if (date != null) {
-          DateTime fulldate = DateTime.now().subtract(Duration(days: 2));
-          DateTime now = DateTime.now();
-          DateTime lastSent = DateTime.parse(date);
-          if (!lastSent.isAfter(fulldate)) {
+          DateTime sentDate = DateTime.parse(date);
+          if (DateTime.now().difference(sentDate).inDays >= 2) {
             return Future.value(true);
+          } else {
+            prefs.setString("date-login-notif", DateTime.now().toString());
+            const AndroidNotificationDetails androidNotificationDetails =
+                AndroidNotificationDetails(
+                    'background', 'Background Notifications',
+                    channelDescription: 'Notifications in the background',
+                    importance: Importance.max,
+                    styleInformation: BigTextStyleInformation(''),
+                    priority: Priority.high,
+                    ticker: 'ticker');
+            const NotificationDetails notificationDetails =
+                NotificationDetails(android: androidNotificationDetails);
+            await globals.flutterLocalNotificationsPlugin.show(
+                0,
+                'You have been logged out',
+                'Click on the notification to reconnect yourself to the app.',
+                notificationDetails,
+                payload: 'login-notif');
           }
-        } else {
-          prefs.setString("date-login-notif", DateTime.now().toString());
         }
-        const AndroidNotificationDetails androidNotificationDetails =
-            AndroidNotificationDetails('background', 'Background Notifications',
-                channelDescription: 'Notifications in the background',
-                importance: Importance.max,
-                priority: Priority.high,
-                ticker: 'ticker');
-        const NotificationDetails notificationDetails =
-            NotificationDetails(android: androidNotificationDetails);
-        await globals.flutterLocalNotificationsPlugin.show(
-            0,
-            'You have been logged out',
-            'Click on the notification to reconnect yourself to the app.',
-            notificationDetails,
-            payload: 'login-notif');
       }
     }
     return Future.value(true);
@@ -98,7 +101,7 @@ Future<void> main() async {
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('notif');
   final InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
+      const InitializationSettings(android: initializationSettingsAndroid);
   await globals.flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: onDidReceiveNotificationResponse);
@@ -113,7 +116,7 @@ Future<void> main() async {
       darkTheme: ThemeData.dark(),
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
-      home: HomePage()));
+      home: const HomePage()));
 }
 
 String? _user;
@@ -163,7 +166,6 @@ class _LoginIntraState extends State<LoginIntra> {
             final gotCookies =
                 await cookieManager.getCookies('https://intra.epitech.eu');
             for (var item in gotCookies) {
-              print(item);
               if (item.name == "user") {
                 final prefs = await SharedPreferences.getInstance();
                 prefs.setString("user", item.value);
@@ -264,7 +266,6 @@ Future<void> setAllNotifsToSent() async {
   String? data = prefs.getString("notifications");
   if (data != null) {
     final jsonList = json.decode(data) as List<dynamic>;
-    print("data list : " + json.decode(data).toString());
     list = jsonList.map((jsonObj) => Notifications.fromJson(jsonObj)).toList();
   }
   for (var notification in list) {
@@ -284,7 +285,6 @@ Future<void> setAllNotifsToRead() async {
   String? data = prefs.getString("notifications");
   if (data != null) {
     final jsonList = json.decode(data) as List<dynamic>;
-    print("data list : " + json.decode(data).toString());
     list = jsonList.map((jsonObj) => Notifications.fromJson(jsonObj)).toList();
   }
   for (var notification in list) {
@@ -296,4 +296,77 @@ Future<void> setAllNotifsToRead() async {
   }
   final jsonValue = json.encode(mapList);
   await prefs.setString("notifications", jsonValue);
+}
+
+Future<void> getNewCookie() async {
+  final completer = Completer<void>();
+  late final PlatformWebViewControllerCreationParams params;
+  if (WebViewPlatform.instance is WebKitWebViewPlatform) {
+    params = WebKitWebViewControllerCreationParams(
+      allowsInlineMediaPlayback: true,
+      mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
+    );
+  } else {
+    params = const PlatformWebViewControllerCreationParams();
+  }
+  final WebViewController controller =
+      WebViewController.fromPlatformCreationParams(params);
+  bool loaded = false;
+  // #enddocregion platform_features
+  controller
+    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+    ..setBackgroundColor(const Color(0x00000000))
+    ..setNavigationDelegate(
+      NavigationDelegate(
+        onProgress: (int progress) {
+          debugPrint('WebView is loading (progress : $progress%)');
+        },
+        onPageStarted: (String url) {
+          debugPrint('Page started loading: $url');
+        },
+        onPageFinished: (String url) async {
+          print(url);
+          final cookieManager = WebviewCookieManager();
+          final gotCookies =
+              await cookieManager.getCookies('https://intra.epitech.eu');
+          for (var item in gotCookies) {
+            if (item.name == "user") {
+              if (kDebugMode) {
+                print("new user !");
+              }
+              final prefs = await SharedPreferences.getInstance();
+              prefs.setString("user", item.value);
+              _user = item.value;
+            }
+          }
+          completer.complete();
+        },
+        onWebResourceError: (WebResourceError error) {
+          loaded = true;
+          completer.complete();
+          debugPrint('''
+Page resource error:
+  code: ${error.errorCode}
+  description: ${error.description}
+  errorType: ${error.errorType}
+  isForMainFrame: ${error.isForMainFrame}
+          ''');
+        },
+      ),
+    );
+  await controller
+      .loadRequest(Uri.parse(
+          "https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=e05d4149-1624-4627-a5ba-7472a39e43ab&redirect_uri=https%3A%2F%2Fintra.epitech.eu%2Fauth%2Foffice365&state=%2F"))
+      .onError((error, stackTrace) => Future.error("Error"));
+  // #docregion platform_features
+  if (controller.platform is AndroidWebViewController) {
+    AndroidWebViewController.enableDebugging(true);
+    (controller.platform as AndroidWebViewController)
+        .setMediaPlaybackRequiresUserGesture(false);
+  }
+  await Future.any([
+    completer.future,
+    Future.delayed(const Duration(seconds: 20),
+        () => throw TimeoutException('Timeout waiting for page to load')),
+  ]);
 }

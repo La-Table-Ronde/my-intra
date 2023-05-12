@@ -124,7 +124,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                       );
                     } else if (snapshot.connectionState ==
                         ConnectionState.waiting) {
-                      return CircularProgressIndicator();
+                      return Center(child: CircularProgressIndicator());
                     } else {
                       Navigator.pushReplacement(
                         context,
@@ -187,7 +187,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                 future: widget.projects,
                 builder: (context, AsyncSnapshot<List<Projects>> snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting ||
-                      snapshot.hasData == false) {
+                      snapshot.hasData == false && snapshot.error == false) {
                     return CircularProgressIndicator();
                   } else if (snapshot.hasData && snapshot.data != null) {
                     final newList = List.from(snapshot.data!);
