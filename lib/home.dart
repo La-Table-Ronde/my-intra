@@ -9,7 +9,6 @@ import 'package:http/http.dart' as http;
 import 'package:in_app_update/in_app_update.dart';
 import 'package:my_intra/calendar_widget.dart';
 import 'package:my_intra/home_widget.dart';
-import 'package:my_intra/main.dart';
 import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
@@ -89,7 +88,6 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
   @override
   void initState() {
     checkForUpdate();
-    getNewCookie();
     projects = getProjectData();
     notifications = getNotifications(true);
     globals.flutterLocalNotificationsPlugin
@@ -209,8 +207,9 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                                     displayedWidget = CalendarWidget();
                                   }
                                   if (index == 3) {
-                                    displayedWidget =
-                                        ProfilePage(data: res.data!);
+                                    displayedWidget = ProfilePage(
+                                        data: res.data!,
+                                        scaffoldKey: _scaffoldKey);
                                   }
                                   if (index == 0) {
                                     displayedWidget = HomeWidget(
@@ -342,7 +341,7 @@ Future<Profile> getProfileData() async {
     ..httpResponseCode = response.statusCode
     ..putAttribute("request_payload", request.body);
   await metric.stop();
-  return Profile(
+  Profile myProfile = Profile(
       gpa: value['gpa'][0]['gpa'],
       name: value['lastname'].toString(),
       firstname: value['firstname'].toString(),
@@ -355,6 +354,8 @@ Future<Profile> getProfileData() async {
       cookie: cookieValue!,
       promo: value['promo'].toString(),
       studentyear: value['studentyear'].toString());
+  await prefs.setString("email", myProfile.email);
+  return myProfile;
 }
 
 Future<List<Projects>> getProjectData() async {

@@ -4,14 +4,14 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:html/parser.dart';
 // ignore_for_file: public_member_api_docs
@@ -20,6 +20,8 @@ import 'package:my_intra/home.dart';
 import 'package:my_intra/model/notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_cookie_manager/webview_cookie_manager.dart';
+import 'package:webview_cookie_manager/webview_cookie_manager.dart'
+    as webview_cookie;
 import 'package:webview_flutter/webview_flutter.dart';
 // #docregion platform_imports
 // Import for Android features.
@@ -61,9 +63,12 @@ void callbackDispatcher() {
       setAllNotifsToSent();
     }
     if (task == "check-connection-task") {
-      await getNewCookie();
       bool login = await checkUserLoggedIn();
       if (!login) {
+        await getNewCookie();
+        if (await checkUserLoggedIn() == true) {
+          return Future.value(true);
+        }
         final prefs = await SharedPreferences.getInstance();
         String? date = prefs.getString("date-login-notif");
         if (date != null) {
@@ -75,13 +80,13 @@ void callbackDispatcher() {
             const AndroidNotificationDetails androidNotificationDetails =
                 AndroidNotificationDetails(
                     'background', 'Background Notifications',
-                    channelDescription: 'Notifications in the background',
-                    importance: Importance.max,
-                    styleInformation: BigTextStyleInformation(''),
-                    priority: Priority.high,
-                    ticker: 'ticker');
+                channelDescription: 'Notifications in the background',
+                importance: Importance.max,
+                styleInformation: BigTextStyleInformation(''),
+                priority: Priority.high,
+                ticker: 'ticker');
             const NotificationDetails notificationDetails =
-                NotificationDetails(android: androidNotificationDetails);
+            NotificationDetails(android: androidNotificationDetails);
             await globals.flutterLocalNotificationsPlugin.show(
                 0,
                 'You have been logged out',
@@ -97,7 +102,6 @@ void callbackDispatcher() {
 }
 
 Future<void> main() async {
-  HttpClient.enableTimelineLogging = true;
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   final fcmToken = await FirebaseMessaging.instance.getToken();
@@ -300,74 +304,57 @@ Future<void> setAllNotifsToRead() async {
 }
 
 Future<void> getNewCookie() async {
-  final completer = Completer<void>();
-  late final PlatformWebViewControllerCreationParams params;
-  if (WebViewPlatform.instance is WebKitWebViewPlatform) {
-    params = WebKitWebViewControllerCreationParams(
-      allowsInlineMediaPlayback: true,
-      mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
-    );
-  } else {
-    params = const PlatformWebViewControllerCreationParams();
+  final prefs = await SharedPreferences.getInstance();
+  String? email = prefs.getString("email");
+  if (email == null) {
+    return;
   }
-  final WebViewController controller =
-      WebViewController.fromPlatformCreationParams(params);
-  bool loaded = false;
-  // #enddocregion platform_features
-  controller
-    ..setJavaScriptMode(JavaScriptMode.unrestricted)
-    ..setBackgroundColor(const Color(0x00000000))
-    ..setNavigationDelegate(
-      NavigationDelegate(
-        onProgress: (int progress) {
-          debugPrint('WebView is loading (progress : $progress%)');
-        },
-        onPageStarted: (String url) {
-          debugPrint('Page started loading: $url');
-        },
-        onPageFinished: (String url) async {
-          print(url);
-          final cookieManager = WebviewCookieManager();
-          final gotCookies =
-              await cookieManager.getCookies('https://intra.epitech.eu');
-          for (var item in gotCookies) {
-            if (item.name == "user") {
-              if (kDebugMode) {
-                print("new user !");
-              }
-              final prefs = await SharedPreferences.getInstance();
-              prefs.setString("user", item.value);
-              _user = item.value;
-            }
-          }
-          completer.complete();
-        },
-        onWebResourceError: (WebResourceError error) {
-          loaded = true;
-          completer.complete();
-          debugPrint('''
-Page resource error:
-  code: ${error.errorCode}
-  description: ${error.description}
-  errorType: ${error.errorType}
-  isForMainFrame: ${error.isForMainFrame}
-          ''');
-        },
-      ),
-    );
-  await controller
-      .loadRequest(Uri.parse(
-          "https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=e05d4149-1624-4627-a5ba-7472a39e43ab&redirect_uri=https%3A%2F%2Fintra.epitech.eu%2Fauth%2Foffice365&state=%2F"))
-      .onError((error, stackTrace) => Future.error("Error"));
-  // #docregion platform_features
-  if (controller.platform is AndroidWebViewController) {
-    AndroidWebViewController.enableDebugging(true);
-    (controller.platform as AndroidWebViewController)
-        .setMediaPlaybackRequiresUserGesture(false);
+  HeadlessInAppWebView? headlessWebView;
+  CookieManager cookieManager = CookieManager.instance();
+  final webViewCookie = webview_cookie.WebviewCookieManager();
+  final cookies =
+      await webViewCookie.getCookies('https://login.microsoftonline.com/');
+  final all = await webViewCookie.getCookies(null);
+  final cookiesSts = await webViewCookie.getCookies('https://sts.epitech.eu');
+  await cookieManager.deleteCookie(
+      url: Uri.parse("https://intra.epitech.eu"), name: "user");
+  for (var cookie in cookies) {
+    await cookieManager.setCookie(
+        url: Uri.parse("login.microsoftonline.com"),
+        name: cookie.name,
+        value: cookie.value,
+        isSecure: cookie.secure,
+        isHttpOnly: cookie.httpOnly);
   }
-  await Future.any([
-    completer.future,
-    Future.delayed(const Duration(seconds: 20),
-        () => throw TimeoutException('Timeout waiting for page to load')),
-  ]);
+  for (var cookie in cookiesSts) {
+    await cookieManager.setCookie(
+        url: Uri.parse("sts.epitech.eu"),
+        name: cookie.name,
+        value: cookie.value,
+        isSecure: cookie.secure,
+        isHttpOnly: cookie.httpOnly);
+  }
+  for (var cookie in all) {
+    await cookieManager.setCookie(
+        url: Uri.parse(cookie.domain!),
+        name: cookie.name,
+        value: cookie.value,
+        isSecure: cookie.secure,
+        isHttpOnly: cookie.httpOnly);
+  }
+  headlessWebView = HeadlessInAppWebView(
+    initialUrlRequest: URLRequest(
+        url: Uri.parse(
+            "https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=e05d4149-1624-4627-a5ba-7472a39e43ab&redirect_uri=https%3A%2F%2Fintra.epitech.eu%2Fauth%2Foffice365&state=%2F&HSU=1&login_hint=${email!}")),
+    onLoadStop: (controller, url) async {
+      //debugPrint(await controller.getHtml());
+    },
+  );
+  await headlessWebView.run();
+  var userCookie = await cookieManager.getCookie(
+      url: Uri.parse("https://intra.epitech.eu"), name: "user");
+  if (userCookie == null) {
+    return;
+  }
+  prefs.setString("user", userCookie.value);
 }

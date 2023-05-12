@@ -7,14 +7,20 @@ import 'package:pie_chart/pie_chart.dart';
 import 'globals.dart' as globals;
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key, required this.data}) : super(key: key);
+  const ProfilePage({Key? key, required this.data, required this.scaffoldKey})
+      : super(key: key);
   final Profile data;
+  final GlobalKey<ScaffoldState> scaffoldKey;
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  void showSnack(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -39,7 +45,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           fontWeight: FontWeight.w600, fontSize: 16),
                     ),
                   ),
-                  IconButton(onPressed: () {}, icon: Icon(Icons.settings))
+                  IconButton(
+                      onPressed: () {
+                        showSnack("Coming soon...");
+                      },
+                      icon: Icon(Icons.settings))
                 ],
               ),
             ),
@@ -109,7 +119,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             padding: const EdgeInsets.only(right: 13, left: 13),
                             decoration: const BoxDecoration(
                                 borderRadius:
-                                    BorderRadius.all(Radius.circular(30)),
+                                BorderRadius.all(Radius.circular(30)),
                                 color: Colors.white),
                             child: Text(
                               "${widget.data.studentyear == "1" ? "1st" : widget.data.studentyear == "2" ? "2nd" : "${widget.data.studentyear}rd"} Year",
@@ -130,7 +140,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           Center(
                             child: ClipRRect(
                               borderRadius:
-                                  const BorderRadius.all(Radius.circular(22)),
+                              const BorderRadius.all(Radius.circular(22)),
                               child: Image.network(
                                 'https://intra.epitech.eu/file/userprofil/profilview/${widget.data.email}.png',
                                 headers: {
@@ -153,11 +163,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   padding: const EdgeInsets.only(
                       left: 28.5, top: 20, bottom: 20, right: 28.5),
                   constraints:
-                      const BoxConstraints(maxWidth: 361, maxHeight: 128),
+                  const BoxConstraints(maxWidth: 361, maxHeight: 128),
                   decoration: BoxDecoration(
                       borderRadius: const BorderRadius.all(Radius.circular(20)),
                       border:
-                          Border.all(color: const Color(0xFFC8D1E6), width: 2)),
+                      Border.all(color: const Color(0xFFC8D1E6), width: 2)),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -245,7 +255,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Center(
               child: Container(
                 constraints:
-                    const BoxConstraints(maxWidth: 250, maxHeight: 250),
+                const BoxConstraints(maxWidth: 250, maxHeight: 250),
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: PieChart(
