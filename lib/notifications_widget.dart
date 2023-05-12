@@ -87,7 +87,6 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                           physics: const NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
                           itemBuilder: (context, index) {
-                            print(snapshot.data![index].read);
                             return Padding(
                               padding:
                                   const EdgeInsets.only(left: 15, right: 15),
@@ -332,7 +331,6 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
 Future<bool> registerToProject(Projects project) async {
   final prefs = await SharedPreferences.getInstance();
   String? user = prefs.getString("user");
-  print("url : " + project.registerUrl);
   if (user == null) {
     return false;
   }

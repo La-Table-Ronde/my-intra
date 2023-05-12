@@ -96,6 +96,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
         ?.requestPermission();
     Workmanager().registerPeriodicTask(
         "check-notifications", "check-notifications-task",
+        constraints: Constraints(networkType: NetworkType.connected),
         existingWorkPolicy: ExistingWorkPolicy.replace);
     // TODO: implement initState
     super.initState();
@@ -217,7 +218,6 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                                       index: _selectedIndex,
                                     );
                                   }
-                                  print("index : " + index.toString());
                                   if (index == 2) {
                                     displayedWidget = NotificationsWidget(
                                       notifications: notifications,
@@ -324,19 +324,22 @@ Future<Profile> getProfileData() async {
   request.headers['cookie'] = "user=$cookieValue";
   final metric =
       FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
-
   await metric.start();
-
   final response = await client.send(request);
-  await metric.stop();
   if (response.statusCode != 200) {
     return Future.error("Error${response.statusCode}");
   }
   final responseBytes = await response.stream.toList();
   final responseString =
-  utf8.decode(responseBytes.expand((byte) => byte).toList());
+      utf8.decode(responseBytes.expand((byte) => byte).toList());
   final value = jsonDecode(responseString);
-  print(value);
+  metric
+    ..responseContentType = response.headers['content-type']
+    ..responsePayloadSize = responseBytes.length
+    ..requestPayloadSize = utf8.encode(request.body).length
+    ..httpResponseCode = response.statusCode
+    ..putAttribute("request_payload", request.body);
+  await metric.stop();
   return Profile(
       gpa: value['gpa'][0]['gpa'],
       name: value['lastname'].toString(),
@@ -375,13 +378,19 @@ Future<List<Projects>> getProjectData() async {
       FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
   await metric.start();
   final response = await client.send(request);
-  await metric.stop();
   if (response.statusCode != 200) {
     return Future.error("Error${response.statusCode}");
   }
   final responseBytes = await response.stream.toList();
   final responseString =
-  utf8.decode(responseBytes.expand((byte) => byte).toList());
+      utf8.decode(responseBytes.expand((byte) => byte).toList());
+  metric
+    ..responseContentType = response.headers['content-type']
+    ..responsePayloadSize = responseBytes.length
+    ..requestPayloadSize = utf8.encode(request.body).length
+    ..httpResponseCode = response.statusCode
+    ..putAttribute("request_payload", request.body);
+  await metric.stop();
   final value = jsonDecode(responseString);
   List<dynamic> projects = value['board']['projets'];
   List<Projects> list = [];
@@ -391,23 +400,27 @@ Future<List<Projects>> getProjectData() async {
     titleLinkSave = titleLinkSave.replaceAll(r'\/', '/');
     titleLinkSave = titleLinkSave.replaceAll('\\', '');
     titleLinkSave =
-    "https://intra.epitech.eu${titleLinkSave}project/register?format=json";
+        "https://intra.epitech.eu${titleLinkSave}project/register?format=json";
     titleLink = titleLink.replaceAll(r'\/', '/');
     titleLink = titleLink.replaceAll('\\', '');
     titleLink = 'https://intra.epitech.eu${titleLink}project/?format=json';
     final request = http.Request('GET', Uri.parse(titleLink));
     request.headers['cookie'] = "user=$cookieValue";
     final metric =
-    FirebasePerformance.instance.newHttpMetric(titleLink, HttpMethod.Get);
+        FirebasePerformance.instance.newHttpMetric(titleLink, HttpMethod.Get);
     await metric.start();
     final response = await client.send(request);
+    final responseBytes = await response.stream.toList();
+    metric
+      ..responseContentType = response.headers['content-type']
+      ..responsePayloadSize = responseBytes.length
+      ..requestPayloadSize = utf8.encode(request.body).length
+      ..httpResponseCode = response.statusCode
+      ..putAttribute("request_payload", request.body);
     await metric.stop();
-    print(response.statusCode);
     if (response.statusCode != 200) {
-      print("err");
       return Future.error("Error${response.statusCode}");
     }
-    final responseBytes = await response.stream.toList();
     final responseString =
         utf8.decode(responseBytes.expand((byte) => byte).toList());
     final value = jsonDecode(responseString);
@@ -460,7 +473,6 @@ Future<List<Notifications>> getNotifications() async {
   String? data = prefs.getString("notifications");
   if (data != null) {
     final jsonList = json.decode(data) as List<dynamic>;
-    print("data list : " + json.decode(data).toString());
     list = jsonList.map((jsonObj) => Notifications.fromJson(jsonObj)).toList();
   }
   for (var notification in notifs) {
@@ -474,10 +486,8 @@ Future<List<Notifications>> getNotifications() async {
     for (var obj in list) {
       if (obj.id == newNotif.id) {
         if (obj.date != newNotif.date) {
-          print("ERROR DATA for obj : " + obj.id);
           list[list.indexOf(obj)] = newNotif;
         }
-        print("${obj.id} is equal to ${newNotif.id}");
         alreadyExists = true;
         break;
       }

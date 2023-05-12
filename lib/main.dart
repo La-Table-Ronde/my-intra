@@ -3,10 +3,13 @@
 // found in the LICENSE file.
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_performance/firebase_performance.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:html/parser.dart';
@@ -57,7 +60,9 @@ void callbackDispatcher() {
     }
     if (task == "check-connection-task") {
       bool login = await checkUserLoggedIn();
-      print("login ? " + login.toString());
+      if (kDebugMode) {
+        print("login ? $login");
+      }
       if (!login) {
         final prefs = await SharedPreferences.getInstance();
         String? date = prefs.getString("date-login-notif");
@@ -92,6 +97,7 @@ void callbackDispatcher() {
 }
 
 Future<void> main() async {
+  HttpClient.enableTimelineLogging = true;
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   final fcmToken = await FirebaseMessaging.instance.getToken();
@@ -108,6 +114,7 @@ Future<void> main() async {
           false // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
       );
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  await FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
   runApp(MaterialApp(
       // standard dark theme
       darkTheme: ThemeData.dark(),
@@ -131,8 +138,6 @@ class _LoginIntraState extends State<LoginIntra> {
   @override
   void initState() {
     super.initState();
-
-    // #docregion platform_features
     late final PlatformWebViewControllerCreationParams params;
     if (WebViewPlatform.instance is WebKitWebViewPlatform) {
       params = WebKitWebViewControllerCreationParams(
@@ -142,11 +147,8 @@ class _LoginIntraState extends State<LoginIntra> {
     } else {
       params = const PlatformWebViewControllerCreationParams();
     }
-
     final WebViewController controller =
         WebViewController.fromPlatformCreationParams(params);
-    // #enddocregion platform_features
-
     controller
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
@@ -163,15 +165,15 @@ class _LoginIntraState extends State<LoginIntra> {
             final gotCookies =
                 await cookieManager.getCookies('https://intra.epitech.eu');
             for (var item in gotCookies) {
-              print(item);
               if (item.name == "user") {
                 final prefs = await SharedPreferences.getInstance();
                 prefs.setString("user", item.value);
                 _user = item.value;
                 Workmanager().registerPeriodicTask(
-                  "check-connection",
-                  "check-connection-task",
-                );
+                    "check-connection", "check-connection-task",
+                    constraints:
+                        Constraints(networkType: NetworkType.connected),
+                    existingWorkPolicy: ExistingWorkPolicy.replace);
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
@@ -255,7 +257,9 @@ class NavigationControls extends StatelessWidget {
 }
 
 void onDidReceiveNotificationResponse(NotificationResponse details) {
-  print(details);
+  if (kDebugMode) {
+    print(details);
+  }
 }
 
 Future<void> setAllNotifsToSent() async {
@@ -264,7 +268,9 @@ Future<void> setAllNotifsToSent() async {
   String? data = prefs.getString("notifications");
   if (data != null) {
     final jsonList = json.decode(data) as List<dynamic>;
-    print("data list : " + json.decode(data).toString());
+    if (kDebugMode) {
+      print("data list : " + json.decode(data).toString());
+    }
     list = jsonList.map((jsonObj) => Notifications.fromJson(jsonObj)).toList();
   }
   for (var notification in list) {
@@ -284,7 +290,9 @@ Future<void> setAllNotifsToRead() async {
   String? data = prefs.getString("notifications");
   if (data != null) {
     final jsonList = json.decode(data) as List<dynamic>;
-    print("data list : " + json.decode(data).toString());
+    if (kDebugMode) {
+      print("data list : " + json.decode(data).toString());
+    }
     list = jsonList.map((jsonObj) => Notifications.fromJson(jsonObj)).toList();
   }
   for (var notification in list) {

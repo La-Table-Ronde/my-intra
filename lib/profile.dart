@@ -26,11 +26,21 @@ class _ProfilePageState extends State<ProfilePage> {
           mainAxisSize: MainAxisSize.max,
           children: [
             Padding(
-              padding: const EdgeInsets.only(bottom: 46, top: 15),
-              child: Text(
-                "My profile",
-                style: GoogleFonts.openSans(
-                    fontWeight: FontWeight.w600, fontSize: 16),
+              padding: const EdgeInsets.only(bottom: 0, top: 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Center(
+                    child: Text(
+                      "My profile",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.openSans(
+                          fontWeight: FontWeight.w600, fontSize: 16),
+                    ),
+                  ),
+                  IconButton(onPressed: () {}, icon: Icon(Icons.settings))
+                ],
               ),
             ),
             Center(

@@ -29,7 +29,6 @@ class _GetGpaState extends State<GetGpa> {
 
     // Create a new http.Request object with the desired URL
     final request = http.Request('GET', Uri.parse(url));
-    print(cookieValue);
     // Set the cookie header in the request
     request.headers['cookie'] = "user=${cookieValue!}";
 
@@ -44,7 +43,6 @@ class _GetGpaState extends State<GetGpa> {
         utf8.decode(responseBytes.expand((byte) => byte).toList());
 
     // Process the response as needed
-    print('Response: $responseString');
     final responseJson = jsonDecode(responseString);
 
 // Extract the "gpa" value from the response

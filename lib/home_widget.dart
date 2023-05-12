@@ -88,7 +88,6 @@ class _HomeWidgetState extends State<HomeWidget> {
                   future: widget.notifications,
                   builder:
                       (context, AsyncSnapshot<List<Notifications>> snapshot) {
-                    print(snapshot.error);
                     if (snapshot.hasData && snapshot.data != null) {
                       int unread = snapshot.data!
                           .where((element) => element.read == false)
