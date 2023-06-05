@@ -177,7 +177,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                   snapshot.data!.sort((a, b) => a.endDate.compareTo(b.endDate));
                   return Padding(
                     padding: const EdgeInsets.only(left: 15, right: 15),
-                    child: Container(
+                    child: SizedBox(
                       width: double.infinity,
                       child: ListView.separated(
                         physics: const NeverScrollableScrollPhysics(),
@@ -258,11 +258,12 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                                       width: 90,
                                       height: 30,
                                       decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.all(
+                                        borderRadius: const BorderRadius.all(
                                             Radius.circular(10)),
                                         border: Border.all(
-                                            width: 2, color: Color(0xFFC8D1E6)),
-                                        color: Color(0xFF7293E1),
+                                            width: 2,
+                                            color: const Color(0xFFC8D1E6)),
+                                        color: const Color(0xFF7293E1),
                                       ),
                                       child: Center(
                                           child: Text(
@@ -279,7 +280,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                                       if (result) {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
-                                          SnackBar(
+                                          const SnackBar(
                                               content: Text(
                                                   "You have been registered !")),
                                         );
@@ -289,7 +290,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                                       } else {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
-                                          SnackBar(
+                                          const SnackBar(
                                               content:
                                                   Text("An error occured.")),
                                         );
@@ -323,7 +324,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
     final notifs = await getNotifications(true);
     setState(() {
       widget.notifications =
-          Future.delayed(Duration(microseconds: 1), () => notifs);
+          Future.delayed(const Duration(microseconds: 1), () => notifs);
     });
   }
 }

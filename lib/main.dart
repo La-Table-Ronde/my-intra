@@ -26,12 +26,15 @@ import 'package:webview_flutter/webview_flutter.dart';
 // #docregion platform_imports
 // Import for Android features.
 import 'package:webview_flutter_android/webview_flutter_android.dart';
+
 // Import for iOS features.
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'globals.dart' as globals;
+
 // #enddocregion platform_imports
+Completer uploadCompleter = Completer();
 
 @pragma(
     'vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
@@ -61,43 +64,19 @@ void callbackDispatcher() {
         }
       }
       setAllNotifsToSent();
+      return (true);
     }
     if (task == "check-connection-task") {
-      bool login = await checkUserLoggedIn();
-      if (!login) {
+      try {
         await getNewCookie();
-        if (await checkUserLoggedIn() == true) {
-          return Future.value(true);
-        }
-        final prefs = await SharedPreferences.getInstance();
-        String? date = prefs.getString("date-login-notif");
-        if (date != null) {
-          DateTime sentDate = DateTime.parse(date);
-          if (DateTime.now().difference(sentDate).inDays >= 2) {
-            return Future.value(true);
-          } else {
-            prefs.setString("date-login-notif", DateTime.now().toString());
-            const AndroidNotificationDetails androidNotificationDetails =
-                AndroidNotificationDetails(
-                    'background', 'Background Notifications',
-                channelDescription: 'Notifications in the background',
-                importance: Importance.max,
-                styleInformation: BigTextStyleInformation(''),
-                priority: Priority.high,
-                ticker: 'ticker');
-            const NotificationDetails notificationDetails =
-            NotificationDetails(android: androidNotificationDetails);
-            await globals.flutterLocalNotificationsPlugin.show(
-                0,
-                'You have been logged out',
-                'Click on the notification to reconnect yourself to the app.',
-                notificationDetails,
-                payload: 'login-notif');
-          }
+      } catch (e) {
+        if (kDebugMode) {
+          print("error : $e");
         }
       }
+      return (true);
     }
-    return Future.value(true);
+    return (false);
   });
 }
 
@@ -107,8 +86,8 @@ Future<void> main() async {
   final fcmToken = await FirebaseMessaging.instance.getToken();
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('notif');
-  final InitializationSettings initializationSettings =
-      const InitializationSettings(android: initializationSettingsAndroid);
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
   await globals.flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: onDidReceiveNotificationResponse);
@@ -174,9 +153,12 @@ class _LoginIntraState extends State<LoginIntra> {
                 prefs.setString("user", item.value);
                 _user = item.value;
                 Workmanager().registerPeriodicTask(
-                  "check-connection",
-                  "check-connection-task",
-                );
+                    "check-connection",
+                    frequency: const Duration(days: 1),
+                    "check-connection-task",
+                    constraints:
+                        Constraints(networkType: NetworkType.connected),
+                    existingWorkPolicy: ExistingWorkPolicy.replace);
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
@@ -260,9 +242,7 @@ class NavigationControls extends StatelessWidget {
 }
 
 void onDidReceiveNotificationResponse(NotificationResponse details) {
-  if (kDebugMode) {
-    print(details);
-  }
+  if (kDebugMode) {}
 }
 
 Future<void> setAllNotifsToSent() async {
@@ -310,6 +290,7 @@ Future<void> getNewCookie() async {
     return;
   }
   HeadlessInAppWebView? headlessWebView;
+  Completer loadingCompleter = Completer();
   CookieManager cookieManager = CookieManager.instance();
   final webViewCookie = webview_cookie.WebviewCookieManager();
   final cookies =
@@ -345,12 +326,20 @@ Future<void> getNewCookie() async {
   headlessWebView = HeadlessInAppWebView(
     initialUrlRequest: URLRequest(
         url: Uri.parse(
-            "https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=e05d4149-1624-4627-a5ba-7472a39e43ab&redirect_uri=https%3A%2F%2Fintra.epitech.eu%2Fauth%2Foffice365&state=%2F&HSU=1&login_hint=${email!}")),
+            "https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=e05d4149-1624-4627-a5ba-7472a39e43ab&redirect_uri=https%3A%2F%2Fintra.epitech.eu%2Fauth%2Foffice365&state=%2F&HSU=1&login_hint=$email")),
     onLoadStop: (controller, url) async {
-      //debugPrint(await controller.getHtml());
+      if (url == Uri.parse("https://intra.epitech.eu/")) {
+        loadingCompleter.complete();
+        var userCookie = await cookieManager.getCookie(
+            url: Uri.parse("https://intra.epitech.eu/"), name: "user");
+        print("got new cookie : " + userCookie?.value);
+        prefs.setString("user", userCookie?.value);
+      }
     },
   );
   await headlessWebView.run();
+  await loadingCompleter.future;
+  await headlessWebView.dispose();
   var userCookie = await cookieManager.getCookie(
       url: Uri.parse("https://intra.epitech.eu"), name: "user");
   if (userCookie == null) {

@@ -78,7 +78,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             padding: const EdgeInsets.only(top: 14, bottom: 5),
             child: Container(
               width: double.infinity,
-              constraints: BoxConstraints(maxHeight: 140),
+              constraints: const BoxConstraints(maxHeight: 140),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                   color: const Color(0xFF7293E1),
@@ -123,7 +123,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                       );
                     } else if (snapshot.connectionState ==
                         ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     } else {
                       Navigator.pushReplacement(
                         context,
@@ -187,7 +187,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                 builder: (context, AsyncSnapshot<List<Projects>> snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting ||
                       snapshot.hasData == false && snapshot.error == false) {
-                    return CircularProgressIndicator();
+                    return const CircularProgressIndicator();
                   } else if (snapshot.hasData && snapshot.data != null) {
                     final newList = List.from(snapshot.data!);
                     newList
@@ -197,23 +197,24 @@ class _HomeWidgetState extends State<HomeWidget> {
                     newList.sort((a, b) => a.endDate.compareTo(b.endDate));
                     return Padding(
                       padding: const EdgeInsets.only(left: 15, right: 15),
-                      child: Container(
+                      child: SizedBox(
                         width: double.infinity,
                         child: ListView.separated(
-                          physics: NeverScrollableScrollPhysics(),
+                          physics: const NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
                           itemCount: newList.length,
                           itemBuilder: (context, index) {
                             return Container(
-                              padding: EdgeInsets.only(
+                              padding: const EdgeInsets.only(
                                   left: 9, right: 9, top: 10, bottom: 10),
-                              constraints:
-                                  BoxConstraints(minHeight: 52, minWidth: 322),
+                              constraints: const BoxConstraints(
+                                  minHeight: 52, minWidth: 322),
                               decoration: BoxDecoration(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(10)),
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(10)),
                                   border: Border.all(
-                                      width: 2, color: Color(0xFFC8D1E6))),
+                                      width: 2,
+                                      color: const Color(0xFFC8D1E6))),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -272,7 +273,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                                                 : "${newList[index].endDate.difference(DateTime.now()).inDays} day",
                                         style: GoogleFonts.openSans(
                                             fontWeight: FontWeight.w700,
-                                            color: Color(0xFF7293E1),
+                                            color: const Color(0xFF7293E1),
                                             fontSize: 12),
                                       )
                                     ],
@@ -282,15 +283,15 @@ class _HomeWidgetState extends State<HomeWidget> {
                             );
                           },
                           separatorBuilder: (BuildContext context, int index) {
-                            return SizedBox(height: 10);
+                            return const SizedBox(height: 10);
                           },
                         ),
                       ),
                     );
                   } else if (snapshot.hasData && snapshot.data == null) {
-                    return Text("");
+                    return const Text("");
                   } else {
-                    return Text("Error. Please reload the app");
+                    return const Text("Error. Please reload the app");
                   }
                 },
               ),
@@ -300,5 +301,4 @@ class _HomeWidgetState extends State<HomeWidget> {
       ),
     );
   }
-
 }

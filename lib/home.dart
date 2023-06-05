@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> {
           future: checkUserLoggedIn(),
           builder: (context, AsyncSnapshot<bool> res) {
             if (res.hasData == false) {
-              return Center(child: const CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator());
             }
             if (res.hasError == true || res.hasData && res.data == false) {
               return const OnboardingWidget();
@@ -61,12 +61,12 @@ class HomePageLoggedIn extends StatefulWidget {
 
 class _HomePageLoggedInState extends State<HomePageLoggedIn> {
   Widget? displayedWidget;
-  ValueNotifier<int> _selectedIndex = ValueNotifier<int>(0);
+  final ValueNotifier<int> _selectedIndex = ValueNotifier<int>(0);
   bool firstRun = true;
   Future<List<Projects>>? projects;
   Future<List<Notifications>>? notifications;
   AppUpdateInfo? _updateInfo;
-  GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
 
   void showSnack(String text) {
     if (_scaffoldKey.currentContext != null) {
@@ -204,7 +204,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                                   _selectedIndex.value = index;
                                   displayedWidget = null;
                                   if (index == 1) {
-                                    displayedWidget = CalendarWidget();
+                                    displayedWidget = const CalendarWidget();
                                   }
                                   if (index == 3) {
                                     displayedWidget = ProfilePage(
@@ -236,7 +236,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                 }),
           );
         } else {
-          return Center(child: const CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
       },
     );
@@ -363,7 +363,7 @@ Future<List<Projects>> getProjectData() async {
     List<Projects> list = [];
     list.add(Projects(
         title: "Travailler",
-        endDate: DateTime.now().add(Duration(days: 12)),
+        endDate: DateTime.now().add(const Duration(days: 12)),
         module: "Test",
         registered: true,
         registrable: false,
@@ -471,7 +471,7 @@ Future<List<Notifications>> getNotifications(bool? foreground) async {
   }
   final responseBytes = await response.stream.toList();
   final responseString =
-  utf8.decode(responseBytes.expand((byte) => byte).toList());
+      utf8.decode(responseBytes.expand((byte) => byte).toList());
   final value = jsonDecode(responseString);
   List<dynamic> notifs = value['history'];
   List<Notifications> list = [];

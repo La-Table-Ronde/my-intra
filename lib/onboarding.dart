@@ -16,7 +16,7 @@ class OnboardingWidget extends StatefulWidget {
 
 class _OnboardingWidgetState extends State<OnboardingWidget> {
   AppUpdateInfo? _updateInfo;
-  GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
 
   Future<void> checkForUpdate() async {
     InAppUpdate.checkForUpdate().then((info) {
@@ -55,7 +55,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
     return Scaffold(
       backgroundColor: const Color(0xFF7293E1),
       body: SingleChildScrollView(
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height,
@@ -98,12 +98,11 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                 Column(
                   children: [
                     InkWell(
-                      onTap: () {
+                      onTap: () async {
                         Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const LoginIntra()),
-                        );
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const LoginIntra()));
                       },
                       child: Container(
                         width: 332,
@@ -198,7 +197,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
     await Future.delayed(const Duration(microseconds: 1));
     final field = TextEditingController();
     bool res = false;
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
 
     await showDialog<void>(
       context: context,
@@ -210,7 +209,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
             child: Column(
               children: <Widget>[
                 Form(
-                  key: _formKey,
+                  key: formKey,
                   child: TextFormField(
                     controller: field,
                     decoration: const InputDecoration(
@@ -233,7 +232,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
             TextButton(
               child: const Text('Ok'),
               onPressed: () {
-                if (_formKey.currentState!.validate()) {
+                if (formKey.currentState!.validate()) {
                   // If the form is valid, display a snackbar. In the real world,
                   // you'd often call a server or save the information in a database.
                   if (field.text == "CorentinTuCassesLesCouilles") {
