@@ -116,11 +116,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
       future: getProfileData(),
       builder: (context, AsyncSnapshot<Profile> res) {
         if (res.hasError) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
-          );
-          return Text("Une erreur s'est produite hmm ${res.error}");
+          return Text("Une erreur s'est produite ${res.error}");
         }
         if (res.hasData && res.data != null) {
           firstRun
@@ -342,18 +338,20 @@ Future<Profile> getProfileData() async {
     ..putAttribute("request_payload", request.body);
   await metric.stop();
   Profile myProfile = Profile(
-      gpa: value['gpa'][0]['gpa'],
+      gpa: value['gpa'][0]['gpa'] == null
+          ? "0"
+          : value['gpa'][0]['gpa'].toString(),
       name: value['lastname'].toString(),
       firstname: value['firstname'].toString(),
-      semester: value['semester'].toString(),
+      semester: value['semester'] != null ? value['semester'].toString() : "0",
       city: value['groups'][0]['title'].toString(),
-      activeLogTime: value['nsstat']['active'].toString(),
-      idleLogTime: value['nsstat']['idle'].toString(),
-      fullCredits: value['credits'].toString(),
+      activeLogTime: value['nsstat'] != null ? value['nsstat']['active'].toString() : "0",
+      idleLogTime: value['nsstat'] != null ? value['nsstat']['idle'].toString() : "0",
+      fullCredits: value['credits'] != null ? value['credits'].toString() : "0",
       email: value['internal_email'].toString(),
       cookie: cookieValue!,
-      promo: value['promo'].toString(),
-      studentyear: value['studentyear'].toString());
+      promo: value['promo'] != null ? value['promo'].toString() : "0",
+      studentyear: value['studentyear'] != null ? value['studentyear'].toString() : "0");
   await prefs.setString("email", myProfile.email);
   return myProfile;
 }

@@ -59,7 +59,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
     return Container(
       padding: const EdgeInsets.only(left: 15, right: 15, top: 0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.max,
         children: [
