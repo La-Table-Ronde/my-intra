@@ -26,7 +26,6 @@ import 'package:webview_flutter/webview_flutter.dart';
 // #docregion platform_imports
 // Import for Android features.
 import 'package:webview_flutter_android/webview_flutter_android.dart';
-
 // Import for iOS features.
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:workmanager/workmanager.dart';
@@ -45,6 +44,17 @@ void callbackDispatcher() {
       final notifs = await getNotifications(false);
       for (var notification in notifs) {
         if (notification.read == false && notification.notifSent == false) {
+          final prefs = await SharedPreferences.getInstance();
+          var notifsSentList = prefs.getStringList("notifsSentList");
+          if (notifsSentList != null) {
+            if (notifsSentList.contains(notification.id)) {
+              break;
+            }
+            notifsSentList.add(notification.id);
+          } else {
+            notifsSentList = [];
+            notifsSentList.add(notification.id);
+          }
           const AndroidNotificationDetails androidNotificationDetails =
               AndroidNotificationDetails('alerts', 'Alerts Notifications',
                   channelDescription:
@@ -55,6 +65,7 @@ void callbackDispatcher() {
                   ticker: 'ticker');
           const NotificationDetails notificationDetails =
               NotificationDetails(android: androidNotificationDetails);
+          prefs.setStringList("notifsSentList", notifsSentList);
           await globals.flutterLocalNotificationsPlugin.show(
               int.parse(notification.id),
               'New notification !',
@@ -63,7 +74,7 @@ void callbackDispatcher() {
               payload: 'alert-notif');
         }
       }
-      setAllNotifsToSent();
+      await setAllNotifsToSent();
       return (true);
     }
     if (task == "check-connection-task") {
@@ -246,6 +257,7 @@ void onDidReceiveNotificationResponse(NotificationResponse details) {
 }
 
 Future<void> setAllNotifsToSent() async {
+  Completer loadingCompleter = Completer();
   final prefs = await SharedPreferences.getInstance();
   List<Notifications> list = [];
   String? data = prefs.getString("notifications");
@@ -261,10 +273,14 @@ Future<void> setAllNotifsToSent() async {
     mapList.add(obj.toJson());
   }
   final jsonValue = json.encode(mapList);
-  await prefs.setString("notifications", jsonValue);
+  await prefs
+      .setString("notifications", jsonValue)
+      .then((value) => loadingCompleter.complete());
+  await loadingCompleter.future;
 }
 
 Future<void> setAllNotifsToRead() async {
+  Completer loadingCompleter = Completer();
   final prefs = await SharedPreferences.getInstance();
   List<Notifications> list = [];
   String? data = prefs.getString("notifications");
@@ -280,7 +296,10 @@ Future<void> setAllNotifsToRead() async {
     mapList.add(obj.toJson());
   }
   final jsonValue = json.encode(mapList);
-  await prefs.setString("notifications", jsonValue);
+  await prefs
+      .setString("notifications", jsonValue)
+      .then((value) => loadingCompleter.complete());
+  await loadingCompleter.future;
 }
 
 Future<void> getNewCookie() async {

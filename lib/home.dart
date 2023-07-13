@@ -495,6 +495,11 @@ Future<List<Notifications>> getNotifications(bool? foreground) async {
         }
         alreadyExists = true;
         break;
+      } else {
+        if (obj.date == newNotif.date && obj.title == newNotif.title) {
+          alreadyExists = true;
+          break;
+        }
       }
     }
     if (!alreadyExists) {
