@@ -97,8 +97,10 @@ Future<void> main() async {
   final fcmToken = await FirebaseMessaging.instance.getToken();
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('notif');
-  const InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
+  const DarwinInitializationSettings initializationSettingsIOS =
+      DarwinInitializationSettings();
+  const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
   await globals.flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: onDidReceiveNotificationResponse);

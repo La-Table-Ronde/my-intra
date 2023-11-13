@@ -197,10 +197,12 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                               ],
                               currentIndex: _selectedIndex.value,
                               onTap: (index) {
-                                globals.flutterLocalNotificationsPlugin
+                                if (Platform.isAndroid) {
+                                  globals.flutterLocalNotificationsPlugin
                                     .resolvePlatformSpecificImplementation<
                                         AndroidFlutterLocalNotificationsPlugin>()!
                                     .requestPermission();
+                                }
                                 setState(() {
                                   firstRun = false;
                                   _selectedIndex.value = index;
