@@ -351,7 +351,6 @@ Future<void> getNewCookie() async {
         loadingCompleter.complete();
         var userCookie = await cookieManager.getCookie(
             url: Uri.parse("https://intra.epitech.eu/"), name: "user");
-        print("got new cookie : " + userCookie?.value);
         prefs.setString("user", userCookie?.value);
       }
     },

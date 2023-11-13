@@ -5,6 +5,7 @@ class Projects {
   final bool registered;
   final bool registrable;
   final String registerUrl;
+  final String filesUrl;
 
   Projects(
       {required this.title,
@@ -12,5 +13,6 @@ class Projects {
       required this.module,
       required this.registered,
       required this.registrable,
-      required this.registerUrl});
+      required this.registerUrl,
+      required this.filesUrl});
 }

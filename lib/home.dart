@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/material.dart';
@@ -87,7 +88,9 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
 
   @override
   void initState() {
-    checkForUpdate();
+    if (Platform.isAndroid) {
+      checkForUpdate();
+    }
     projects = getProjectData();
     notifications = getNotifications(true);
     globals.flutterLocalNotificationsPlugin
@@ -104,13 +107,16 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
 
   @override
   Widget build(BuildContext context) {
-    if (_updateInfo?.updateAvailability == UpdateAvailability.updateAvailable &&
-        _updateInfo!.availableVersionCode!.isEven) {
-      InAppUpdate.performImmediateUpdate()
-          .catchError((e) => showSnack(e.toString()));
-    } else if (_updateInfo?.updateAvailability ==
-        UpdateAvailability.updateAvailable) {
-      InAppUpdate.startFlexibleUpdate();
+    if (Platform.isAndroid) {
+      if (_updateInfo?.updateAvailability ==
+              UpdateAvailability.updateAvailable &&
+          _updateInfo!.availableVersionCode!.isEven) {
+        InAppUpdate.performImmediateUpdate()
+            .catchError((e) => showSnack(e.toString()));
+      } else if (_updateInfo?.updateAvailability ==
+          UpdateAvailability.updateAvailable) {
+        InAppUpdate.startFlexibleUpdate();
+      }
     }
     return FutureBuilder(
       future: getProfileData(),
@@ -345,13 +351,16 @@ Future<Profile> getProfileData() async {
       firstname: value['firstname'].toString(),
       semester: value['semester'] != null ? value['semester'].toString() : "0",
       city: value['groups'][0]['title'].toString(),
-      activeLogTime: value['nsstat'] != null ? value['nsstat']['active'].toString() : "0",
-      idleLogTime: value['nsstat'] != null ? value['nsstat']['idle'].toString() : "0",
+      activeLogTime:
+          value['nsstat'] != null ? value['nsstat']['active'].toString() : "0",
+      idleLogTime:
+          value['nsstat'] != null ? value['nsstat']['idle'].toString() : "0",
       fullCredits: value['credits'] != null ? value['credits'].toString() : "0",
       email: value['internal_email'].toString(),
       cookie: cookieValue!,
       promo: value['promo'] != null ? value['promo'].toString() : "0",
-      studentyear: value['studentyear'] != null ? value['studentyear'].toString() : "0");
+      studentyear:
+          value['studentyear'] != null ? value['studentyear'].toString() : "0");
   await prefs.setString("email", myProfile.email);
   return myProfile;
 }
@@ -365,7 +374,8 @@ Future<List<Projects>> getProjectData() async {
         module: "Test",
         registered: true,
         registrable: false,
-        registerUrl: "gmail.com"));
+        registerUrl: "gmail.com",
+        filesUrl: "gmail.com"));
     return list;
   }
   final prefs = await SharedPreferences.getInstance();
@@ -397,6 +407,7 @@ Future<List<Projects>> getProjectData() async {
   List<Projects> list = [];
   for (var project in projects) {
     String titleLink = project['title_link'];
+    String projectLink = "";
     String titleLinkSave = project['title_link'];
     titleLinkSave = titleLinkSave.replaceAll(r'\/', '/');
     titleLinkSave = titleLinkSave.replaceAll('\\', '');
@@ -404,6 +415,7 @@ Future<List<Projects>> getProjectData() async {
         "https://intra.epitech.eu${titleLinkSave}project/register?format=json";
     titleLink = titleLink.replaceAll(r'\/', '/');
     titleLink = titleLink.replaceAll('\\', '');
+    projectLink = titleLink;
     titleLink = 'https://intra.epitech.eu${titleLink}project/?format=json';
     final request = http.Request('GET', Uri.parse(titleLink));
     request.headers['cookie'] = "user=$cookieValue";
@@ -434,7 +446,9 @@ Future<List<Projects>> getProjectData() async {
         endDate: DateTime.parse(value['end']),
         module: value['module_title'].toString(),
         registered: value['user_project_status'] != null ? true : false,
-        registerUrl: titleLinkSave));
+        registerUrl: titleLinkSave,
+        filesUrl:
+            'https://intra.epitech.eu${projectLink}project/file/?format=json'));
   }
   return list;
 }

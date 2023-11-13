@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -30,7 +32,9 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
 
   @override
   void initState() {
-    checkForUpdate();
+    if (Platform.isAndroid) {
+      checkForUpdate();
+    }
     // TODO: implement initState
     super.initState();
   }
@@ -44,13 +48,16 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_updateInfo?.updateAvailability == UpdateAvailability.updateAvailable &&
-        _updateInfo!.availableVersionCode!.isEven) {
-      InAppUpdate.performImmediateUpdate()
-          .catchError((e) => showSnack(e.toString()));
-    } else if (_updateInfo?.updateAvailability ==
-        UpdateAvailability.updateAvailable) {
-      InAppUpdate.startFlexibleUpdate();
+    if (Platform.isAndroid) {
+      if (_updateInfo?.updateAvailability ==
+              UpdateAvailability.updateAvailable &&
+          _updateInfo!.availableVersionCode!.isEven) {
+        InAppUpdate.performImmediateUpdate()
+            .catchError((e) => showSnack(e.toString()));
+      } else if (_updateInfo?.updateAvailability ==
+          UpdateAvailability.updateAvailable) {
+        InAppUpdate.startFlexibleUpdate();
+      }
     }
     return Scaffold(
       backgroundColor: const Color(0xFF7293E1),

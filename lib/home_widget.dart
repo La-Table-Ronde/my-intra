@@ -5,6 +5,8 @@ import 'package:my_intra/main.dart';
 import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
+import 'package:my_intra/utils/files_modal.dart';
+import 'package:my_intra/utils/get_files_project.dart';
 
 import 'consts.dart' as consts;
 import 'globals.dart' as globals;
@@ -204,81 +206,88 @@ class _HomeWidgetState extends State<HomeWidget> {
                           shrinkWrap: true,
                           itemCount: newList.length,
                           itemBuilder: (context, index) {
-                            return Container(
-                              padding: const EdgeInsets.only(
-                                  left: 9, right: 9, top: 10, bottom: 10),
-                              constraints: const BoxConstraints(
-                                  minHeight: 52, minWidth: 322),
-                              decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(10)),
-                                  border: Border.all(
-                                      width: 2,
-                                      color: const Color(0xFFC8D1E6))),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 46,
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: SvgPicture.asset(
-                                        "assets/project-icon.svg",
-                                        width: 32,
-                                        height: 32,
+                            return InkWell(
+                              onTap: () async {
+                                await showFileModal(newList[index], context);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.only(
+                                    left: 9, right: 9, top: 10, bottom: 10),
+                                constraints: const BoxConstraints(
+                                    minHeight: 52, minWidth: 322),
+                                decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10)),
+                                    border: Border.all(
+                                        width: 2,
+                                        color: const Color(0xFFC8D1E6))),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 46,
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: SvgPicture.asset(
+                                          "assets/project-icon.svg",
+                                          width: 32,
+                                          height: 32,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      newList[index].title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.start,
-                                      style: GoogleFonts.openSans(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16),
-                                    ),
-                                  ),
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "End:",
+                                    Expanded(
+                                      child: Text(
+                                        newList[index].title,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.start,
                                         style: GoogleFonts.openSans(
-                                            fontWeight: FontWeight.w400,
-                                            fontSize: 12),
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16),
                                       ),
-                                      Text(
-                                        newList[index]
-                                                    .endDate
-                                                    .difference(DateTime.now())
-                                                    .inDays >
-                                                1
-                                            ? "${newList[index].endDate.difference(DateTime.now()).inDays} days"
-                                            : newList[index]
-                                                        .endDate
-                                                        .difference(
-                                                            DateTime.now())
-                                                        .inDays ==
-                                                    0
-                                                ? "Today"
-                                                : "${newList[index].endDate.difference(DateTime.now()).inDays} day",
-                                        style: GoogleFonts.openSans(
-                                            fontWeight: FontWeight.w700,
-                                            color: const Color(0xFF7293E1),
-                                            fontSize: 12),
-                                      )
-                                    ],
-                                  ),
-                                ],
+                                    ),
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "End:",
+                                          textAlign: TextAlign.start,
+                                          style: GoogleFonts.openSans(
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 12),
+                                        ),
+                                        Text(
+                                          newList[index]
+                                                      .endDate
+                                                      .difference(
+                                                          DateTime.now())
+                                                      .inDays >
+                                                  1
+                                              ? "${newList[index].endDate.difference(DateTime.now()).inDays} days"
+                                              : newList[index]
+                                                          .endDate
+                                                          .difference(
+                                                              DateTime.now())
+                                                          .inDays ==
+                                                      0
+                                                  ? "Today"
+                                                  : "${newList[index].endDate.difference(DateTime.now()).inDays} day",
+                                          style: GoogleFonts.openSans(
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF7293E1),
+                                              fontSize: 12),
+                                        )
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           },
