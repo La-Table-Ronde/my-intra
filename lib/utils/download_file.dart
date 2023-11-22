@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/material.dart';
 import 'package:my_intra/globals.dart' as globals;
@@ -30,17 +31,20 @@ Future<void> downloadFile(String fileUrl, String filename) async {
     if (Platform.isIOS) {
       directory = await getApplicationDocumentsDirectory();
     } else {
+      await getApplicationDocumentsDirectory();
       directory = Directory('/storage/emulated/0/Download');
-      // Put file in global download folder, if for an unknown reason it didn't exist, we fallback
-      // ignore: avoid_slow_async_io
       if (!await directory.exists())
         directory = await getExternalStorageDirectory();
     }
   } catch (err, stack) {
-    debugPrint("Cannot get download folder path");
+    FirebaseCrashlytics.instance.recordError(err, stack);
   }
-  final file = File('${directory!.path}/$filename');
-  await file.writeAsBytes(responseBytes.expand((byte) => byte).toList());
-  debugPrint(file.path);
-  await OpenFile.open(file.path);
+  try {
+    final file = File('${directory!.path}/my_intra/$filename');
+    file.create(recursive: true);
+    await file.writeAsBytes(responseBytes.expand((byte) => byte).toList());
+    await OpenFile.open(file.path);
+  } catch (err, stack) {
+    FirebaseCrashlytics.instance.recordError(err, stack);
+  }
 }

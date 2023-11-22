@@ -8,11 +8,12 @@ import 'package:http/http.dart' as http;
 
 import '../model/event.dart';
 
-Future<List<Event>> getEventsForDate(DateTime date) async {
+Future<List<Event>> getEventsForDate(
+    DateTime startDate, DateTime endDate) async {
   final prefs = await SharedPreferences.getInstance();
   String? user = prefs.getString("user");
   final url =
-      "https://intra.epitech.eu/planning/load?format=json&start=${date.year}-${date.month}-${date.day}&end=${date.year}-${date.month}-${date.day}";
+      "https://intra.epitech.eu/planning/load?format=json&start=${startDate.year}-${startDate.month}-${startDate.day}&end=${endDate.year}-${endDate.month}-${endDate.day}";
   final client = http.Client();
   final cookieValue = user;
   final request = http.Request('GET', Uri.parse(url));
@@ -25,7 +26,6 @@ Future<List<Event>> getEventsForDate(DateTime date) async {
     return Future.error("Error${response.statusCode}");
   }
   final responseBytes = await response.stream.toList();
-  debugPrint(responseBytes.toString());
   final responseString =
       utf8.decode(responseBytes.expand((byte) => byte).toList());
   final value = jsonDecode(responseString);
@@ -37,9 +37,31 @@ Future<List<Event>> getEventsForDate(DateTime date) async {
     ..putAttribute("request_payload", request.body);
   await metric.stop();
   final List<Event> events = [];
+  if (responseString.length == 2) {
+    return events;
+  }
+  if (value == null) {
+    return events;
+  }
   for (var event in value) {
-    print(event);
-    events.add(Event.fromJson(event));
+    Event evt = Event.fromJson(event);
+    if (evt.eventRegistered == "registered") {
+      if (evt.rdvGroupRegistered != null) {
+        List<String> times = evt.rdvGroupRegistered!.split("|");
+        String startTime = times[0];
+        String endTime = times[1];
+        evt.start = DateTime.parse(startTime);
+        evt.end = DateTime.parse(endTime);
+      }
+      if (evt.rdvIndivRegistered != null) {
+        List<String> times = evt.rdvGroupRegistered!.split("|");
+        String startTime = times[0];
+        String endTime = times[1];
+        evt.start = DateTime.parse(startTime);
+        evt.end = DateTime.parse(endTime);
+      }
+      events.add(evt);
+    }
   }
   return events;
 }

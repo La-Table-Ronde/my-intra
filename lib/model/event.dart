@@ -9,8 +9,8 @@ class Event {
   final String? titlemodule;
   final String? actiTitle;
   final int numEvent;
-  final DateTime start;
-  final DateTime end;
+  DateTime start;
+  DateTime end;
   final int totalStudentsRegistered;
   final String? title;
   final String? typeTitle;
@@ -20,8 +20,6 @@ class Event {
   final DateTime allowedPlanningStart;
   final DateTime allowedPlanningEnd;
   final int nbGroup;
-  final dynamic nbMaxStudentsProjet;
-  final dynamic dates;
   final bool moduleAvailable;
   final bool moduleRegistered;
   final bool past;
@@ -35,8 +33,7 @@ class Event {
   final bool registerProf;
   final bool registerMonth;
   final bool inMoreThanOneMonth;
-  final dynamic rights;
-  final dynamic statusManager;
+  final Map<String?, dynamic>? room;
 
   Event({
     required this.scolaryear,
@@ -60,8 +57,6 @@ class Event {
     required this.allowedPlanningStart,
     required this.allowedPlanningEnd,
     required this.nbGroup,
-    required this.nbMaxStudentsProjet,
-    required this.dates,
     required this.moduleAvailable,
     required this.moduleRegistered,
     required this.past,
@@ -75,8 +70,7 @@ class Event {
     required this.registerProf,
     required this.registerMonth,
     required this.inMoreThanOneMonth,
-    required this.rights,
-    required this.statusManager,
+    required this.room,
   });
 
   factory Event.fromJson(Map<String?, dynamic> json) {
@@ -102,8 +96,6 @@ class Event {
       allowedPlanningStart: DateTime.parse(json['allowed_planning_start']),
       allowedPlanningEnd: DateTime.parse(json['allowed_planning_end']),
       nbGroup: json['nb_group'],
-      nbMaxStudentsProjet: json['nb_max_students_projet'],
-      dates: json['dates'],
       moduleAvailable: json['module_available'],
       moduleRegistered: json['module_registered'],
       past: json['past'],
@@ -117,8 +109,7 @@ class Event {
       registerProf: json['register_prof'],
       registerMonth: json['register_month'],
       inMoreThanOneMonth: json['in_more_than_one_month'],
-      rights: json['rights'],
-      statusManager: json['status_manager'],
+      room: json['room'] != null ? Map<String, dynamic>.from(json['room']) : {},
     );
   }
   Map<String?, dynamic> toJson() {
@@ -144,8 +135,6 @@ class Event {
       'allowed_planning_start': allowedPlanningStart.toIso8601String(),
       'allowed_planning_end': allowedPlanningEnd.toIso8601String(),
       'nb_group': nbGroup,
-      'nb_max_students_projet': nbMaxStudentsProjet,
-      'dates': dates,
       'module_available': moduleAvailable,
       'module_registered': moduleRegistered,
       'past': past,
@@ -159,8 +148,6 @@ class Event {
       'register_prof': registerProf,
       'register_month': registerMonth,
       'in_more_than_one_month': inMoreThanOneMonth,
-      'rights': rights,
-      'status_manager': statusManager,
     };
   }
 }

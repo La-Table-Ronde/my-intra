@@ -145,95 +145,80 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                     );
                     firstRun = false;
                   }
-
                   return Scaffold(
-                      bottomNavigationBar: Padding(
-                        padding: const EdgeInsets.only(
-                            bottom: 19, right: 14, left: 14),
-                        child: Container(
-                          decoration: BoxDecoration(
-                              border: Border.all(
-                                  color: const Color(0xFFC8D1E6), width: 3),
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(20))),
-                          child: ClipRRect(
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(20)),
-                            child: BottomNavigationBar(
-                              type: BottomNavigationBarType.fixed,
-                              showSelectedLabels: false,
-                              showUnselectedLabels: false,
-                              selectedIconTheme:
-                                  const IconThemeData(color: Color(0xFF7293E1)),
-                              items: [
-                                BottomNavigationBarItem(
-                                    icon: SvgPicture.asset(
-                                      _selectedIndex.value == 0
-                                          ? "assets/home-icon-selected.svg"
-                                          : "assets/home-icon.svg",
-                                    ),
-                                    label: "Home"),
-                                BottomNavigationBarItem(
-                                    icon: SvgPicture.asset(
-                                      _selectedIndex.value == 1
-                                          ? "assets/calendar-icon-selected.svg"
-                                          : "assets/calendar-icon.svg",
-                                    ),
-                                    label: "Agenda"),
-                                BottomNavigationBarItem(
-                                    icon: SvgPicture.asset(
-                                      _selectedIndex.value == 2
-                                          ? "assets/notif-icon-selected.svg"
-                                          : "assets/notif-icon.svg",
-                                    ),
-                                    label: "Alertes"),
-                                BottomNavigationBarItem(
-                                    icon: SvgPicture.asset(
-                                      _selectedIndex.value == 3
-                                          ? "assets/profile-icon-selected.svg"
-                                          : "assets/profile-icon.svg",
-                                    ),
-                                    label: "profil")
-                              ],
-                              currentIndex: _selectedIndex.value,
-                              onTap: (index) {
-                                if (Platform.isAndroid) {
-                                  globals.flutterLocalNotificationsPlugin
-                                    .resolvePlatformSpecificImplementation<
-                                        AndroidFlutterLocalNotificationsPlugin>()!
-                                    .requestPermission();
-                                }
-                                setState(() {
-                                  firstRun = false;
-                                  _selectedIndex.value = index;
-                                  displayedWidget = null;
-                                  if (index == 1) {
-                                    displayedWidget = const CalendarWidget();
-                                  }
-                                  if (index == 3) {
-                                    displayedWidget = ProfilePage(
-                                        data: res.data!,
-                                        scaffoldKey: _scaffoldKey);
-                                  }
-                                  if (index == 0) {
-                                    displayedWidget = HomeWidget(
-                                      data: res.data!,
-                                      projects: projects,
-                                      notifications: notifications,
-                                      index: _selectedIndex,
-                                    );
-                                  }
-                                  if (index == 2) {
-                                    displayedWidget = NotificationsWidget(
-                                      notifications: notifications,
-                                      data: res.data!,
-                                      projects: projects,
-                                    );
-                                  }
-                                });
-                              },
-                            ),
-                          ),
+                      bottomNavigationBar: Container(
+                        child: BottomNavigationBar(
+                          type: BottomNavigationBarType.fixed,
+                          showSelectedLabels: false,
+                          showUnselectedLabels: false,
+                          selectedIconTheme:
+                              const IconThemeData(color: Color(0xFF7293E1)),
+                          items: [
+                            BottomNavigationBarItem(
+                                icon: SvgPicture.asset(
+                                  _selectedIndex.value == 0
+                                      ? "assets/home-icon-selected.svg"
+                                      : "assets/home-icon.svg",
+                                ),
+                                label: "Home"),
+                            BottomNavigationBarItem(
+                                icon: SvgPicture.asset(
+                                  _selectedIndex.value == 1
+                                      ? "assets/calendar-icon-selected.svg"
+                                      : "assets/calendar-icon.svg",
+                                ),
+                                label: "Agenda"),
+                            BottomNavigationBarItem(
+                                icon: SvgPicture.asset(
+                                  _selectedIndex.value == 2
+                                      ? "assets/notif-icon-selected.svg"
+                                      : "assets/notif-icon.svg",
+                                ),
+                                label: "Alertes"),
+                            BottomNavigationBarItem(
+                                icon: SvgPicture.asset(
+                                  _selectedIndex.value == 3
+                                      ? "assets/profile-icon-selected.svg"
+                                      : "assets/profile-icon.svg",
+                                ),
+                                label: "profil")
+                          ],
+                          currentIndex: _selectedIndex.value,
+                          onTap: (index) {
+                            if (Platform.isAndroid) {
+                              globals.flutterLocalNotificationsPlugin
+                                  .resolvePlatformSpecificImplementation<
+                                      AndroidFlutterLocalNotificationsPlugin>()!
+                                  .requestPermission();
+                            }
+                            setState(() {
+                              firstRun = false;
+                              _selectedIndex.value = index;
+                              displayedWidget = null;
+                              if (index == 1) {
+                                displayedWidget = const CalendarWidget();
+                              }
+                              if (index == 3) {
+                                displayedWidget = ProfilePage(
+                                    data: res.data!, scaffoldKey: _scaffoldKey);
+                              }
+                              if (index == 0) {
+                                displayedWidget = HomeWidget(
+                                  data: res.data!,
+                                  projects: projects,
+                                  notifications: notifications,
+                                  index: _selectedIndex,
+                                );
+                              }
+                              if (index == 2) {
+                                displayedWidget = NotificationsWidget(
+                                  notifications: notifications,
+                                  data: res.data!,
+                                  projects: projects,
+                                );
+                              }
+                            });
+                          },
                         ),
                       ),
                       body: displayedWidget);
