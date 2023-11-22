@@ -143,6 +143,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                   const BorderRadius.all(Radius.circular(22)),
                               child: Image.network(
                                 'https://intra.epitech.eu/file/userprofil/profilview/${widget.data.email}.png',
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(Icons.person,
+                                      color: Colors.white, size: 44);
+                                },
                                 headers: {
                                   'Cookie': 'user=${widget.data.cookie}'
                                 },

@@ -67,6 +67,10 @@ class _HomeWidgetState extends State<HomeWidget> {
                     borderRadius: const BorderRadius.all(Radius.circular(15)),
                     child: Image.network(
                       'https://intra.epitech.eu/file/userprofil/profilview/${widget.data.email}.png',
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.person,
+                            color: Colors.black, size: 44);
+                      },
                       width: 64,
                       height: 64,
                       headers: {'Cookie': 'user=${widget.data.cookie}'},
