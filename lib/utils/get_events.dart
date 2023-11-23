@@ -45,7 +45,9 @@ Future<List<Event>> getEventsForDate(
   }
   for (var event in value) {
     Event evt = Event.fromJson(event);
-    if (evt.eventRegistered == "registered") {
+    if (evt.eventRegistered == "present" ||
+        evt.eventRegistered == "absent" ||
+        evt.eventRegistered == "registered") {
       if (evt.rdvGroupRegistered != null) {
         List<String> times = evt.rdvGroupRegistered!.split("|");
         String startTime = times[0];
