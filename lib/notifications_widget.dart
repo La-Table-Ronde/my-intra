@@ -92,7 +92,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                                   const EdgeInsets.only(left: 15, right: 15),
                               child: Container(
                                 padding: const EdgeInsets.only(
-                                    left: 9, right: 9, top: 10, bottom: 10),
+                                    left: 15, right: 15, top: 10, bottom: 10),
                                 constraints: const BoxConstraints(
                                     minHeight: 52, minWidth: 322),
                                 decoration: BoxDecoration(
@@ -186,7 +186,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                         itemBuilder: (context, index) {
                           return Container(
                             padding: const EdgeInsets.only(
-                                left: 9, right: 9, top: 10, bottom: 10),
+                                left: 15, right: 15, top: 10, bottom: 10),
                             constraints: const BoxConstraints(
                                 minHeight: 52, minWidth: 322),
                             decoration: BoxDecoration(
@@ -211,16 +211,14 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                                   ),
                                 ),
                                 Expanded(
-                                  child: Center(
-                                    child: Text(
-                                      snapshot.data![index].title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.start,
-                                      style: GoogleFonts.openSans(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16),
-                                    ),
+                                  child: Text(
+                                    snapshot.data![index].title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.start,
+                                    style: GoogleFonts.openSans(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16),
                                   ),
                                 ),
                                 if (snapshot.data![index].registered)
