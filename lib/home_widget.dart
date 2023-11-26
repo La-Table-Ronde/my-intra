@@ -32,7 +32,7 @@ class _HomeWidgetState extends State<HomeWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(left: 14, right: 14, top: 50, bottom: 14),
+      padding: const EdgeInsets.only(left: 14, right: 14, top: 15, bottom: 14),
       child: Column(
         mainAxisSize: MainAxisSize.max,
         children: [
