@@ -175,7 +175,7 @@ class _HomeWidgetState extends State<HomeWidget> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 10, bottom: 10),
+            padding: const EdgeInsets.only(top: 20, bottom: 20),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -217,7 +217,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                               },
                               child: Container(
                                 padding: const EdgeInsets.only(
-                                    left: 9, right: 9, top: 10, bottom: 10),
+                                    left: 15, right: 15, top: 10, bottom: 10),
                                 constraints: const BoxConstraints(
                                     minHeight: 52, minWidth: 322),
                                 decoration: BoxDecoration(
