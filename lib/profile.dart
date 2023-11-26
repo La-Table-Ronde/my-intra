@@ -56,7 +56,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Center(
               child: Container(
                 padding: const EdgeInsets.only(
-                    left: 35, right: 35, top: 15, bottom: 15),
+                    left: 20, right: 20, top: 30, bottom: 30),
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.all(Radius.circular(20)),
                   color: const Color(0xFF7293E1),
@@ -100,6 +100,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   color: Colors.white)
                             ],
                           ),
+                          const SizedBox(height: 1),
                           StyledTextWidget(
                             text: "Promotion ${widget.data.promo}",
                             defaultStyle: const TextStyle(
@@ -115,6 +116,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   color: Colors.white)
                             ],
                           ),
+                          const SizedBox(height: 3),
                           Container(
                             padding: const EdgeInsets.only(right: 13, left: 13),
                             decoration: const BoxDecoration(
@@ -147,10 +149,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                   return const Icon(Icons.person,
                                       color: Colors.white, size: 44);
                                 },
+                                width: 96,
+                                height: 96,
                                 headers: {
                                   'Cookie': 'user=${widget.data.cookie}'
                                 },
-                                scale: 1.5,
                               ),
                             ),
                           ),
@@ -164,8 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Padding(
                 padding: const EdgeInsets.only(top: 10, bottom: 10),
                 child: Container(
-                  padding: const EdgeInsets.only(
-                      left: 28.5, top: 20, bottom: 20, right: 28.5),
+                  padding: const EdgeInsets.all(20),
                   constraints:
                       const BoxConstraints(maxWidth: 361, maxHeight: 130),
                   decoration: BoxDecoration(
@@ -211,6 +213,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ],
                         ),
                       ),
+                      const SizedBox(width: 50),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
