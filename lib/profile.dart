@@ -167,7 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   padding: const EdgeInsets.only(
                       left: 28.5, top: 20, bottom: 20, right: 28.5),
                   constraints:
-                      const BoxConstraints(maxWidth: 361, maxHeight: 128),
+                      const BoxConstraints(maxWidth: 361, maxHeight: 130),
                   decoration: BoxDecoration(
                       borderRadius: const BorderRadius.all(Radius.circular(20)),
                       border:
