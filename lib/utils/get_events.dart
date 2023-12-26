@@ -55,12 +55,16 @@ Future<List<Event>> getEventsForDate(
         evt.start = DateTime.parse(startTime);
         evt.end = DateTime.parse(endTime);
       }
-      if (evt.rdvIndivRegistered != null) {
+      if (evt.rdvIndivRegistered != null && evt.rdvGroupRegistered != null) {
         List<String> times = evt.rdvGroupRegistered!.split("|");
         String startTime = times[0];
         String endTime = times[1];
         evt.start = DateTime.parse(startTime);
         evt.end = DateTime.parse(endTime);
+      } else if (evt.rdvIndivRegistered != null) {
+        debugPrint("rdvIndivRegistered is not null");
+        debugPrint(evt.actiTitle);
+        debugPrint(evt.toString());
       }
       events.add(evt);
     }

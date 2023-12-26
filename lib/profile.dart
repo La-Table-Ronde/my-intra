@@ -122,7 +122,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     BorderRadius.all(Radius.circular(30)),
                                 color: Colors.white),
                             child: Text(
-                              "${widget.data.studentyear == "1" ? "1st" : widget.data.studentyear == "2" ? "2nd" : "${widget.data.studentyear}rd"} Year",
+                              "${widget.data.studentyear == "1" ? "1st" : widget.data.studentyear == "2" ? "2nd" : "${widget.data.studentyear}th"} Year",
                               style: GoogleFonts.openSans(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 10,

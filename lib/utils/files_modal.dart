@@ -13,8 +13,8 @@ Future<void> showFileModal(Projects project, BuildContext context) async {
       builder: (context) {
         return AlertDialog(
           contentPadding: EdgeInsets.zero,
-          insetPadding: EdgeInsets.symmetric(horizontal: 0),
-          shape: RoundedRectangleBorder(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 0),
+          shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(20))),
           content: SizedBox(
             width: 332,
@@ -35,13 +35,13 @@ Future<void> showFileModal(Projects project, BuildContext context) async {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          SizedBox(height: 20),
-                          Text(
+                          const SizedBox(height: 20),
+                          const Text(
                             "Files available",
                             style: TextStyle(
                                 fontSize: 20, fontWeight: FontWeight.bold),
                           ),
-                          SizedBox(height: 30),
+                          const SizedBox(height: 30),
                           ListView.builder(
                             shrinkWrap: true,
                             itemCount: snapshot.data!.length,
@@ -104,14 +104,22 @@ Future<void> showFileModal(Projects project, BuildContext context) async {
                                                   downloading = true;
                                                 });
                                                 await downloadFile(
-                                                    snapshot.data![index].url,
-                                                    snapshot.data![index].name);
+                                                        snapshot
+                                                            .data![index].url,
+                                                        snapshot
+                                                            .data![index].name)
+                                                    .catchError((err) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(const SnackBar(
+                                                          content: Text(
+                                                              "Error while downloading file")));
+                                                });
                                                 setStateDownload(() {
                                                   downloading = false;
                                                 });
                                               },
                                             )
-                                          : CircularProgressIndicator()
+                                          : const CircularProgressIndicator()
                                     ],
                                   ),
                                 );
@@ -123,9 +131,9 @@ Future<void> showFileModal(Projects project, BuildContext context) async {
                     );
                   } else if (snapshot.hasData == false &&
                       snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   } else {
-                    return Center(child: Text("No files available"));
+                    return const Center(child: Text("No files available"));
                   }
                 }),
           ),

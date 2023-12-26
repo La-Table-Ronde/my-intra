@@ -29,12 +29,13 @@ Future<void> downloadFile(String fileUrl, String filename) async {
   Directory? directory;
   try {
     if (Platform.isIOS) {
-      directory = await getApplicationDocumentsDirectory();
+      directory = await getTemporaryDirectory();
     } else {
-      await getApplicationDocumentsDirectory();
+      await getTemporaryDirectory();
       directory = Directory('/storage/emulated/0/Download');
-      if (!await directory.exists())
-        directory = await getExternalStorageDirectory();
+      if (!await directory.exists()) {
+        directory = await getTemporaryDirectory();
+      }
     }
   } catch (err, stack) {
     FirebaseCrashlytics.instance.recordError(err, stack);
@@ -46,5 +47,6 @@ Future<void> downloadFile(String fileUrl, String filename) async {
     await OpenFile.open(file.path);
   } catch (err, stack) {
     FirebaseCrashlytics.instance.recordError(err, stack);
+    rethrow;
   }
 }
