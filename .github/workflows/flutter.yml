@@ -15,6 +15,6 @@ jobs:
         with:
           channel: 'stable'
       - run: flutter pub get
-      - run: cd mobile && dart format .
+      - run: dart format .
       - name: Commit and push changes
         run: git diff --exit-code || { git config user.name "GitHub Actions"; git config user.email "actions@github.com"; git add .; git commit -m "Apply dart formatting"; git push origin $GITHUB_REF; }
