@@ -24,5 +24,7 @@ jobs:
           git commit -am "Apply dart formatting"
           git push origin format
       - name: Create Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr create -B main -H format --title 'Merge format into main' --body 'Created by Github action'
