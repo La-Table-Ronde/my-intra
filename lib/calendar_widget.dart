@@ -1,4 +1,3 @@
-
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -198,8 +197,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
             },
             controller: CalendarController(),
             appointmentBuilder: (context, calendarAppointmentDetails) {
-              final Event event =
-                  calendarAppointmentDetails.appointments.first;
+              final Event event = calendarAppointmentDetails.appointments.first;
               return Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -248,7 +246,8 @@ class _CalendarWidgetState extends State<CalendarWidget> {
                 await showNotificationsSettingsModal(context);
               },
               style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white, backgroundColor: const Color(0xFF7293E1),
+                foregroundColor: Colors.white,
+                backgroundColor: const Color(0xFF7293E1),
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),

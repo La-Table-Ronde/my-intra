@@ -106,11 +106,7 @@ Future<void> main() async {
   await globals.flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: onDidReceiveNotificationResponse);
-  Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode:
-          false
-      );
+  Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   await FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
   runApp(MaterialApp(
@@ -120,7 +116,6 @@ Future<void> main() async {
       debugShowCheckedModeBanner: false,
       home: const HomePage()));
 }
-
 
 class LoginIntra extends StatefulWidget {
   const LoginIntra({super.key});
@@ -172,13 +167,13 @@ class _LoginIntraState extends State<LoginIntra> {
                     constraints:
                         Constraints(networkType: NetworkType.connected),
                     existingWorkPolicy: ExistingWorkPolicy.replace);
-                    if (context.mounted) {
-                      Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const HomePageLoggedIn()),
-                );
-                    }
+                if (context.mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const HomePageLoggedIn()),
+                  );
+                }
                 return;
               }
             }

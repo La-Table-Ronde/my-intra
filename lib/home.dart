@@ -100,8 +100,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
         "check-notifications", "check-notifications-task",
         constraints: Constraints(networkType: NetworkType.connected),
         existingWorkPolicy: ExistingWorkPolicy.replace);
-    Workmanager().registerPeriodicTask(
-        "check-events", "check-events-task",
+    Workmanager().registerPeriodicTask("check-events", "check-events-task",
         constraints: Constraints(networkType: NetworkType.connected),
         frequency: const Duration(minutes: 15),
         existingWorkPolicy: ExistingWorkPolicy.replace);
@@ -114,11 +113,10 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
       if (_updateInfo?.updateAvailability ==
               UpdateAvailability.updateAvailable &&
           _updateInfo!.availableVersionCode!.isEven) {
-        InAppUpdate.performImmediateUpdate()
-            .onError((e, stack) {
-              showSnack(e.toString());
-              return Future.error(stack);
-            });
+        InAppUpdate.performImmediateUpdate().onError((e, stack) {
+          showSnack(e.toString());
+          return Future.error(stack);
+        });
       } else if (_updateInfo?.updateAvailability ==
           UpdateAvailability.updateAvailable) {
         InAppUpdate.startFlexibleUpdate();
@@ -262,34 +260,34 @@ Future<void> showDialogConnexionIntra(BuildContext context) async {
   await Future.delayed(const Duration(microseconds: 1));
   if (context.mounted) {
     return showDialog<void>(
-    context: context,
-    barrierDismissible: false, // user must tap button!
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Connexion'),
-        content: const SingleChildScrollView(
-          child: ListBody(
-            children: <Widget>[
-              Text(
-                  'Since the end of 2022, it is not longer possible to login with an autologin link.'),
-              Text(
-                  'Therefore, My Intra uses a cookie system to keep you logged in.'),
-              Text(
-                  'For this to work, you need to login to your Intra account, then the application will automatically retrieve the cookie.')
-            ],
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Connexion'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                    'Since the end of 2022, it is not longer possible to login with an autologin link.'),
+                Text(
+                    'Therefore, My Intra uses a cookie system to keep you logged in.'),
+                Text(
+                    'For this to work, you need to login to your Intra account, then the application will automatically retrieve the cookie.')
+              ],
+            ),
           ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Ok'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      );
-    },
-  );
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Ok'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 

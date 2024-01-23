@@ -51,11 +51,10 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
       if (_updateInfo?.updateAvailability ==
               UpdateAvailability.updateAvailable &&
           _updateInfo!.availableVersionCode!.isEven) {
-        InAppUpdate.performImmediateUpdate()
-            .onError((e, stack){
-              showSnack(e.toString());
-            return Future.error(stack);
-            });
+        InAppUpdate.performImmediateUpdate().onError((e, stack) {
+          showSnack(e.toString());
+          return Future.error(stack);
+        });
       } else if (_updateInfo?.updateAvailability ==
           UpdateAvailability.updateAvailable) {
         InAppUpdate.startFlexibleUpdate();
@@ -169,36 +168,36 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
     await Future.delayed(const Duration(microseconds: 1));
     if (context.mounted) {
       return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('New Update'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(
-                    'Because of a radical change to the login process of the Intranet, the old app was not working anymore'),
-                Text(
-                    'We decided to recode My Intra from scratch, and releasing the app to iOS.'),
-                Text(
-                    'The app will have new features and a way better design. We are planning on releasing it in the next few weeks.'),
-                Text(
-                    'In the meantime we have pushed this version of the app so that you will be notified when the new app will be released with a built-in update feature.')
-              ],
+        context: context,
+        barrierDismissible: false, // user must tap button!
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('New Update'),
+            content: const SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  Text(
+                      'Because of a radical change to the login process of the Intranet, the old app was not working anymore'),
+                  Text(
+                      'We decided to recode My Intra from scratch, and releasing the app to iOS.'),
+                  Text(
+                      'The app will have new features and a way better design. We are planning on releasing it in the next few weeks.'),
+                  Text(
+                      'In the meantime we have pushed this version of the app so that you will be notified when the new app will be released with a built-in update feature.')
+                ],
+              ),
             ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Ok'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Ok'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
@@ -209,60 +208,60 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
     final formKey = GlobalKey<FormState>();
     if (context.mounted) {
       await showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Login'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                Form(
-                  key: formKey,
-                  child: TextFormField(
-                    controller: field,
-                    decoration: const InputDecoration(
-                      icon: Icon(Icons.login),
-                      hintText: 'Login value',
-                      labelText: 'Login',
+        context: context,
+        barrierDismissible: false, // user must tap button!
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Login'),
+            content: SingleChildScrollView(
+              child: Column(
+                children: <Widget>[
+                  Form(
+                    key: formKey,
+                    child: TextFormField(
+                      controller: field,
+                      decoration: const InputDecoration(
+                        icon: Icon(Icons.login),
+                        hintText: 'Login value',
+                        labelText: 'Login',
+                      ),
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter some text';
+                        }
+                        return null;
+                      },
                     ),
-                    validator: (String? value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter some text';
-                      }
-                      return null;
-                    },
-                  ),
-                )
-              ],
+                  )
+                ],
+              ),
             ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Ok'),
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  // If the form is valid, display a snackbar. In the real world,
-                  // you'd often call a server or save the information in a database.
-                  if (field.text == "CorentinTuCassesLesCouilles") {
-                    res = true;
-                  } else {
-                    res = false;
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Ok'),
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    // If the form is valid, display a snackbar. In the real world,
+                    // you'd often call a server or save the information in a database.
+                    if (field.text == "CorentinTuCassesLesCouilles") {
+                      res = true;
+                    } else {
+                      res = false;
+                    }
+                    Navigator.of(context).pop();
                   }
+                },
+              ),
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () {
                   Navigator.of(context).pop();
-                }
-              },
-            ),
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+                },
+              ),
+            ],
+          );
+        },
+      );
     }
     return res;
   }
