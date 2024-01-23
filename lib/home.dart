@@ -42,7 +42,6 @@ class _HomePageState extends State<HomePage> {
             }
             if (res.hasError == true || res.hasData && res.data == false) {
               return const OnboardingWidget();
-              return const Text("Une erreur s'est produite");
             } else {
               return const HomePageLoggedIn();
             }
@@ -101,7 +100,11 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
         "check-notifications", "check-notifications-task",
         constraints: Constraints(networkType: NetworkType.connected),
         existingWorkPolicy: ExistingWorkPolicy.replace);
-    // TODO: implement initState
+    Workmanager().registerPeriodicTask(
+        "check-events", "check-events-task",
+        constraints: Constraints(networkType: NetworkType.connected),
+        frequency: const Duration(minutes: 15),
+        existingWorkPolicy: ExistingWorkPolicy.replace);
     super.initState();
   }
 
@@ -112,7 +115,10 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
               UpdateAvailability.updateAvailable &&
           _updateInfo!.availableVersionCode!.isEven) {
         InAppUpdate.performImmediateUpdate()
-            .catchError((e) => showSnack(e.toString()));
+            .onError((e, stack) {
+              showSnack(e.toString());
+              return Future.error(stack);
+            });
       } else if (_updateInfo?.updateAvailability ==
           UpdateAvailability.updateAvailable) {
         InAppUpdate.startFlexibleUpdate();
@@ -145,80 +151,78 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                   firstRun = false;
                 }
                 return Scaffold(
-                    bottomNavigationBar: Container(
-                      child: BottomNavigationBar(
-                        type: BottomNavigationBarType.fixed,
-                        showSelectedLabels: false,
-                        showUnselectedLabels: false,
-                        selectedIconTheme:
-                            const IconThemeData(color: Color(0xFF7293E1)),
-                        items: [
-                          BottomNavigationBarItem(
-                              icon: SvgPicture.asset(
-                                _selectedIndex.value == 0
-                                    ? "assets/home-icon-selected.svg"
-                                    : "assets/home-icon.svg",
-                              ),
-                              label: "Home"),
-                          BottomNavigationBarItem(
-                              icon: SvgPicture.asset(
-                                _selectedIndex.value == 1
-                                    ? "assets/calendar-icon-selected.svg"
-                                    : "assets/calendar-icon.svg",
-                              ),
-                              label: "Agenda"),
-                          BottomNavigationBarItem(
-                              icon: SvgPicture.asset(
-                                _selectedIndex.value == 2
-                                    ? "assets/notif-icon-selected.svg"
-                                    : "assets/notif-icon.svg",
-                              ),
-                              label: "Alertes"),
-                          BottomNavigationBarItem(
-                              icon: SvgPicture.asset(
-                                _selectedIndex.value == 3
-                                    ? "assets/profile-icon-selected.svg"
-                                    : "assets/profile-icon.svg",
-                              ),
-                              label: "profil")
-                        ],
-                        currentIndex: _selectedIndex.value,
-                        onTap: (index) {
-                          if (Platform.isAndroid) {
-                            globals.flutterLocalNotificationsPlugin
-                                .resolvePlatformSpecificImplementation<
-                                    AndroidFlutterLocalNotificationsPlugin>()!
-                                .requestPermission();
+                    bottomNavigationBar: BottomNavigationBar(
+                      type: BottomNavigationBarType.fixed,
+                      showSelectedLabels: false,
+                      showUnselectedLabels: false,
+                      selectedIconTheme:
+                          const IconThemeData(color: Color(0xFF7293E1)),
+                      items: [
+                        BottomNavigationBarItem(
+                            icon: SvgPicture.asset(
+                              _selectedIndex.value == 0
+                                  ? "assets/home-icon-selected.svg"
+                                  : "assets/home-icon.svg",
+                            ),
+                            label: "Home"),
+                        BottomNavigationBarItem(
+                            icon: SvgPicture.asset(
+                              _selectedIndex.value == 1
+                                  ? "assets/calendar-icon-selected.svg"
+                                  : "assets/calendar-icon.svg",
+                            ),
+                            label: "Agenda"),
+                        BottomNavigationBarItem(
+                            icon: SvgPicture.asset(
+                              _selectedIndex.value == 2
+                                  ? "assets/notif-icon-selected.svg"
+                                  : "assets/notif-icon.svg",
+                            ),
+                            label: "Alertes"),
+                        BottomNavigationBarItem(
+                            icon: SvgPicture.asset(
+                              _selectedIndex.value == 3
+                                  ? "assets/profile-icon-selected.svg"
+                                  : "assets/profile-icon.svg",
+                            ),
+                            label: "profil")
+                      ],
+                      currentIndex: _selectedIndex.value,
+                      onTap: (index) {
+                        if (Platform.isAndroid) {
+                          globals.flutterLocalNotificationsPlugin
+                              .resolvePlatformSpecificImplementation<
+                                  AndroidFlutterLocalNotificationsPlugin>()!
+                              .requestPermission();
+                        }
+                        setState(() {
+                          firstRun = false;
+                          _selectedIndex.value = index;
+                          displayedWidget = null;
+                          if (index == 1) {
+                            displayedWidget = const CalendarWidget();
                           }
-                          setState(() {
-                            firstRun = false;
-                            _selectedIndex.value = index;
-                            displayedWidget = null;
-                            if (index == 1) {
-                              displayedWidget = const CalendarWidget();
-                            }
-                            if (index == 3) {
-                              displayedWidget = ProfilePage(
-                                  data: res.data!, scaffoldKey: _scaffoldKey);
-                            }
-                            if (index == 0) {
-                              displayedWidget = HomeWidget(
-                                data: res.data!,
-                                projects: projects,
-                                notifications: notifications,
-                                index: _selectedIndex,
-                              );
-                            }
-                            if (index == 2) {
-                              displayedWidget = NotificationsWidget(
-                                notifications: notifications,
-                                data: res.data!,
-                                projects: projects,
-                              );
-                            }
-                          });
-                        },
-                      ),
+                          if (index == 3) {
+                            displayedWidget = ProfilePage(
+                                data: res.data!, scaffoldKey: _scaffoldKey);
+                          }
+                          if (index == 0) {
+                            displayedWidget = HomeWidget(
+                              data: res.data!,
+                              projects: projects,
+                              notifications: notifications,
+                              index: _selectedIndex,
+                            );
+                          }
+                          if (index == 2) {
+                            displayedWidget = NotificationsWidget(
+                              notifications: notifications,
+                              data: res.data!,
+                              projects: projects,
+                            );
+                          }
+                        });
+                      },
                     ),
                     body: SafeArea(child: displayedWidget!));
               });
@@ -256,15 +260,16 @@ Future<bool> checkUserLoggedIn() async {
 
 Future<void> showDialogConnexionIntra(BuildContext context) async {
   await Future.delayed(const Duration(microseconds: 1));
-  return showDialog<void>(
+  if (context.mounted) {
+    return showDialog<void>(
     context: context,
     barrierDismissible: false, // user must tap button!
     builder: (BuildContext context) {
       return AlertDialog(
         title: const Text('Connexion'),
-        content: SingleChildScrollView(
+        content: const SingleChildScrollView(
           child: ListBody(
-            children: const <Widget>[
+            children: <Widget>[
               Text(
                   'Since the end of 2022, it is not longer possible to login with an autologin link.'),
               Text(
@@ -285,6 +290,7 @@ Future<void> showDialogConnexionIntra(BuildContext context) async {
       );
     },
   );
+  }
 }
 
 Future<Profile> getProfileData() async {

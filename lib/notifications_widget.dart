@@ -13,6 +13,7 @@ import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// ignore: must_be_immutable
 class NotificationsWidget extends StatefulWidget {
   NotificationsWidget(
       {Key? key,
@@ -37,9 +38,11 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
   @override
   void dispose() {
     if (widget.notifications != null) {
-      widget.notifications!.then((value) => value.forEach((element) {
+      widget.notifications!.then((value) {
+        for (var element in value) {
             element.read = true;
-          }));
+        }
+      });
       List<Map<String, dynamic>> mapList = [];
       widget.notifications!.then((value) {
         for (Notifications obj in value) {
@@ -278,22 +281,26 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                                       bool result = await registerToProject(
                                           snapshot.data![index]);
                                       if (result) {
-                                        ScaffoldMessenger.of(context)
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           const SnackBar(
                                               content: Text(
                                                   "You have been registered !")),
                                         );
+                                        }
                                         setState(() {
                                           widget.projects = getProjectData();
                                         });
                                       } else {
-                                        ScaffoldMessenger.of(context)
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           const SnackBar(
                                               content:
                                                   Text("An error occured.")),
                                         );
+                                        }
                                       }
                                     },
                                   )

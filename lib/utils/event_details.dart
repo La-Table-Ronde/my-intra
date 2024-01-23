@@ -8,7 +8,7 @@ Future<void> showEventDetailsModal(Event event, BuildContext context) async {
       builder: (context) {
         return AlertDialog(
           title: Text(event.actiTitle ?? "No title"),
-          shape: RoundedRectangleBorder(
+          shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(20))),
           content: SingleChildScrollView(
             child: ListBody(
@@ -25,7 +25,7 @@ Future<void> showEventDetailsModal(Event event, BuildContext context) async {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Close'),
+              child: const Text('Close'),
               onPressed: () {
                 Navigator.of(context).pop();
               },

@@ -1,13 +1,8 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,15 +13,13 @@ import 'package:html/parser.dart';
 
 import 'package:my_intra/home.dart';
 import 'package:my_intra/model/notifications.dart';
+import 'package:my_intra/utils/check_for_events.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_cookie_manager/webview_cookie_manager.dart';
 import 'package:webview_cookie_manager/webview_cookie_manager.dart'
     as webview_cookie;
 import 'package:webview_flutter/webview_flutter.dart';
-// #docregion platform_imports
-// Import for Android features.
 import 'package:webview_flutter_android/webview_flutter_android.dart';
-// Import for iOS features.
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -87,6 +80,16 @@ void callbackDispatcher() {
       }
       return (true);
     }
+    if (task == "check-events-task") {
+      try {
+        await checkForEvents();
+      } catch (e) {
+        if (kDebugMode) {
+          print("error : $e");
+        }
+      }
+      return (true);
+    }
     return (false);
   });
 }
@@ -94,7 +97,6 @@ void callbackDispatcher() {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  final fcmToken = await FirebaseMessaging.instance.getToken();
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('notif');
   const DarwinInitializationSettings initializationSettingsIOS =
@@ -105,9 +107,9 @@ Future<void> main() async {
       initializationSettings,
       onDidReceiveNotificationResponse: onDidReceiveNotificationResponse);
   Workmanager().initialize(
-      callbackDispatcher, // The top level function, aka callbackDispatcher
+      callbackDispatcher,
       isInDebugMode:
-          false // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+          false
       );
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   await FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
@@ -119,7 +121,6 @@ Future<void> main() async {
       home: const HomePage()));
 }
 
-String? _user;
 
 class LoginIntra extends StatefulWidget {
   const LoginIntra({super.key});
@@ -164,7 +165,6 @@ class _LoginIntraState extends State<LoginIntra> {
               if (item.name == "user") {
                 final prefs = await SharedPreferences.getInstance();
                 prefs.setString("user", item.value);
-                _user = item.value;
                 Workmanager().registerPeriodicTask(
                     "check-connection",
                     frequency: const Duration(days: 1),
@@ -172,11 +172,13 @@ class _LoginIntraState extends State<LoginIntra> {
                     constraints:
                         Constraints(networkType: NetworkType.connected),
                     existingWorkPolicy: ExistingWorkPolicy.replace);
-                Navigator.pushReplacement(
+                    if (context.mounted) {
+                      Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                       builder: (context) => const HomePageLoggedIn()),
                 );
+                    }
                 return;
               }
             }
@@ -248,8 +250,8 @@ class NavigationControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: const <Widget>[],
+    return const Row(
+      children: <Widget>[],
     );
   }
 }

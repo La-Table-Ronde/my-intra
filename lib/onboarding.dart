@@ -35,7 +35,6 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
     if (Platform.isAndroid) {
       checkForUpdate();
     }
-    // TODO: implement initState
     super.initState();
   }
 
@@ -53,7 +52,10 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
               UpdateAvailability.updateAvailable &&
           _updateInfo!.availableVersionCode!.isEven) {
         InAppUpdate.performImmediateUpdate()
-            .catchError((e) => showSnack(e.toString()));
+            .onError((e, stack){
+              showSnack(e.toString());
+            return Future.error(stack);
+            });
       } else if (_updateInfo?.updateAvailability ==
           UpdateAvailability.updateAvailable) {
         InAppUpdate.startFlexibleUpdate();
@@ -75,24 +77,22 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 11),
-                        child: SvgPicture.asset(
-                          "assets/logo.svg",
-                          width: 105,
-                          height: 146,
-                        ),
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 11),
+                      child: SvgPicture.asset(
+                        "assets/logo.svg",
+                        width: 105,
+                        height: 146,
                       ),
-                      Text("{ My Intra }",
-                          style: GoogleFonts.openSans(
-                              fontSize: 48,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white)),
-                    ],
-                  ),
+                    ),
+                    Text("{ My Intra }",
+                        style: GoogleFonts.openSans(
+                            fontSize: 48,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white)),
+                  ],
                 ),
                 Text(
                   "A mobile app for Epitech students",
@@ -167,15 +167,16 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
 
   Future<void> showUpdateMessage(BuildContext context) async {
     await Future.delayed(const Duration(microseconds: 1));
-    return showDialog<void>(
+    if (context.mounted) {
+      return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('New Update'),
-          content: SingleChildScrollView(
+          content: const SingleChildScrollView(
             child: ListBody(
-              children: const <Widget>[
+              children: <Widget>[
                 Text(
                     'Because of a radical change to the login process of the Intranet, the old app was not working anymore'),
                 Text(
@@ -198,6 +199,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
         );
       },
     );
+    }
   }
 
   Future<bool> showLoginAdmin(BuildContext context) async {
@@ -205,8 +207,8 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
     final field = TextEditingController();
     bool res = false;
     final formKey = GlobalKey<FormState>();
-
-    await showDialog<void>(
+    if (context.mounted) {
+      await showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
@@ -261,6 +263,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
         );
       },
     );
+    }
     return res;
   }
 }
