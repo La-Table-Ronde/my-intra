@@ -40,7 +40,7 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
     if (widget.notifications != null) {
       widget.notifications!.then((value) {
         for (var element in value) {
-            element.read = true;
+          element.read = true;
         }
       });
       List<Map<String, dynamic>> mapList = [];
@@ -283,11 +283,11 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                                       if (result) {
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  "You have been registered !")),
-                                        );
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content: Text(
+                                                    "You have been registered !")),
+                                          );
                                         }
                                         setState(() {
                                           widget.projects = getProjectData();
@@ -295,11 +295,11 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
                                       } else {
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content:
-                                                  Text("An error occured.")),
-                                        );
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content:
+                                                    Text("An error occured.")),
+                                          );
                                         }
                                       }
                                     },
