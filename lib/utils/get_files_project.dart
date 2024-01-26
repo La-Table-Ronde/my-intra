@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:my_intra/model/files.dart';
-import 'package:my_intra/globals.dart' as globals;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -36,7 +35,7 @@ Future<List<File>> getFilesForProject(String projectUrl) async {
   for (var file in value) {
     if (file['type'] == 'd') {
       List<File> filesInFolder = await getFilesForProject(
-          'https://intra.epitech.eu/' + file['fullpath'] + '/?format=json');
+          "https://intra.epitech.eu/${file['fullpath']}/?format=json");
       files.addAll(filesInFolder);
       continue;
     }

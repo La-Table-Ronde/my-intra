@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_intra/model/profile.dart';
-import 'package:my_intra/styleText.dart';
+import 'package:my_intra/style_text.dart';
 import 'package:pie_chart/pie_chart.dart';
 
 import 'globals.dart' as globals;

@@ -6,7 +6,6 @@ import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
 import 'package:my_intra/utils/files_modal.dart';
-import 'package:my_intra/utils/get_files_project.dart';
 
 import 'consts.dart' as consts;
 import 'globals.dart' as globals;

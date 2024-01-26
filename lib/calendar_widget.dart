@@ -1,8 +1,8 @@
-
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_intra/model/event.dart';
+import 'package:my_intra/notifications_settings.dart';
 import 'package:my_intra/utils/event_details.dart';
 import 'package:my_intra/utils/get_events.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
@@ -48,8 +48,9 @@ class EventDataSource extends CalendarDataSource {
         continue;
       }
       List<Event> tmpEvents =
-          await getEventsForDate(date, date).catchError((error, stackTrace) {
+          await getEventsForDate(date, date).onError((error, stackTrace) {
         FirebaseCrashlytics.instance.recordError(error, stackTrace);
+        return [];
       });
       events.addAll(tmpEvents);
       globals.loadedDates.add(date);
@@ -67,7 +68,6 @@ class CalendarWidget extends StatefulWidget {
 }
 
 class _CalendarWidgetState extends State<CalendarWidget> {
-  DateTime _focusedDay = DateTime.now();
   List<Event> events = globals.loadedEvents;
   List<Event> getEventsForDay(DateTime selectedDay, List<Event> events) {
     return events.where((event) {
@@ -95,7 +95,6 @@ class _CalendarWidgetState extends State<CalendarWidget> {
   Widget loadMoreWidget(
       BuildContext context, LoadMoreCallback loadMoreAppointments) {
     return FutureBuilder<void>(
-      initialData: 'loading',
       future: loadMoreAppointments(),
       builder: (context, snapshot) {
         return Container(
@@ -113,131 +112,147 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     return Column(
       children: [
         Expanded(
-          child: Container(
-            child: SfCalendar(
-              view: CalendarView.week,
-              dataSource: EventDataSource(events),
-              scheduleViewSettings: ScheduleViewSettings(
-                  monthHeaderSettings: const MonthHeaderSettings(height: 75)),
-              scheduleViewMonthHeaderBuilder: (context, details) {
-                var formattedDate = dateFormat.format(details.date);
-                return Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF7293E1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    width: details.bounds.width,
-                    height: 150,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            formattedDate,
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ));
-              },
-              viewHeaderStyle: const ViewHeaderStyle(
-                dayTextStyle: TextStyle(
-                  color: Color(0xFF7293E1),
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                dateTextStyle: TextStyle(
-                  color: Color(0xFF7293E1),
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              headerStyle: const CalendarHeaderStyle(
-                textStyle: TextStyle(
-                  color: Color(0xFF7293E1),
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              todayHighlightColor: const Color(0xFF7293E1),
-              loadMoreWidgetBuilder: loadMoreWidget,
-              initialSelectedDate: DateTime.now(),
-              initialDisplayDate: DateTime.now(),
-              appointmentTimeTextFormat: "HH:mm",
-              allowViewNavigation: true,
-              showNavigationArrow: true,
-              firstDayOfWeek: 1,
-              timeSlotViewSettings: const TimeSlotViewSettings(
-                timeIntervalHeight: 100,
-                timeIntervalWidth: 400,
-                timeInterval: Duration(minutes: 30),
-                timeFormat: "HH:mm",
-              ),
-              allowedViews: const [
-                CalendarView.day,
-                CalendarView.week,
-                CalendarView.schedule
-              ],
-              onSelectionChanged: (details) {
-                // setState(() {
-                //   events = getEventsForDay(details.date!, events);
-                // });
-              },
-              onTap: (details) {
-                if (details.appointments == null ||
-                    details.appointments!.isEmpty) {
-                  return;
-                }
-                showEventDetailsModal(details.appointments![0], context);
-              },
-              controller: CalendarController(),
-              appointmentBuilder: (context, calendarAppointmentDetails) {
-                final Event event =
-                    calendarAppointmentDetails.appointments.first;
-                return Container(
+          child: SfCalendar(
+            view: CalendarView.week,
+            dataSource: EventDataSource(events),
+            scheduleViewSettings: const ScheduleViewSettings(
+                monthHeaderSettings: MonthHeaderSettings(height: 75)),
+            scheduleViewMonthHeaderBuilder: (context, details) {
+              var formattedDate = dateFormat.format(details.date);
+              return Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: event.typeCode == "rdv"
-                        ? Colors.red
-                        : event.typeCode == "tp"
-                            ? Colors.green
-                            : Colors.blue,
+                    color: const Color(0xFF7293E1),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  width: calendarAppointmentDetails.bounds.width,
-                  height: calendarAppointmentDetails.bounds.height,
+                  width: details.bounds.width,
+                  height: 150,
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Flexible(
                         child: Text(
-                          event.actiTitle ?? "No title",
+                          formattedDate,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 40,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
-                          maxLines: 6,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text(
-                        event.instanceLocation ?? "",
+                    ],
+                  ));
+            },
+            viewHeaderStyle: const ViewHeaderStyle(
+              dayTextStyle: TextStyle(
+                color: Color(0xFF7293E1),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+              dateTextStyle: TextStyle(
+                color: Color(0xFF7293E1),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            headerStyle: const CalendarHeaderStyle(
+              textStyle: TextStyle(
+                color: Color(0xFF7293E1),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            todayHighlightColor: const Color(0xFF7293E1),
+            loadMoreWidgetBuilder: loadMoreWidget,
+            initialSelectedDate: DateTime.now(),
+            initialDisplayDate: DateTime.now(),
+            appointmentTimeTextFormat: "HH:mm",
+            allowViewNavigation: true,
+            showNavigationArrow: true,
+            firstDayOfWeek: 1,
+            timeSlotViewSettings: const TimeSlotViewSettings(
+              timeIntervalHeight: 100,
+              timeIntervalWidth: 400,
+              timeInterval: Duration(minutes: 30),
+              timeFormat: "HH:mm",
+            ),
+            allowedViews: const [
+              CalendarView.day,
+              CalendarView.week,
+              CalendarView.schedule
+            ],
+            onSelectionChanged: (details) {
+              // setState(() {
+              //   events = getEventsForDay(details.date!, events);
+              // });
+            },
+            onTap: (details) {
+              if (details.appointments == null ||
+                  details.appointments!.isEmpty) {
+                return;
+              }
+              showEventDetailsModal(details.appointments![0], context);
+            },
+            controller: CalendarController(),
+            appointmentBuilder: (context, calendarAppointmentDetails) {
+              final Event event = calendarAppointmentDetails.appointments.first;
+              return Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: event.typeCode == "rdv"
+                      ? Colors.red
+                      : event.typeCode == "tp"
+                          ? Colors.green
+                          : Colors.blue,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                width: calendarAppointmentDetails.bounds.width,
+                height: calendarAppointmentDetails.bounds.height,
+                child: Column(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        event.actiTitle ?? "No title",
                         style: const TextStyle(
-                          fontSize: 10,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
+                        maxLines: 6,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
-                );
+                    ),
+                    Text(
+                      event.instanceLocation ?? "",
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () async {
+                await showNotificationsSettingsModal(context);
               },
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: const Color(0xFF7293E1),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                ),
+              ),
+              child: const Text("Notifications settings"),
             ),
           ),
         ),
