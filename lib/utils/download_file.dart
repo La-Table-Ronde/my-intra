@@ -40,7 +40,12 @@ Future<void> downloadFile(String fileUrl, String filename) async {
   try {
     final file = File('${directory!.path}/my_intra/$filename');
     file.create(recursive: true);
-    await file.writeAsBytes(responseBytes.expand((byte) => byte).toList());
+    if (file.existsSync()) {
+      await file.writeAsBytes(responseBytes.expand((byte) => byte).toList());
+    } else {
+      File('${directory.path}/my_intra/$filename');
+      await file.writeAsBytes(responseBytes.expand((byte) => byte).toList());
+    }
     await OpenFile.open(file.path);
   } catch (err, stack) {
     FirebaseCrashlytics.instance.recordError(err, stack);
