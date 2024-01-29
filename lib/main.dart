@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -160,13 +161,18 @@ class _LoginIntraState extends State<LoginIntra> {
               if (item.name == "user") {
                 final prefs = await SharedPreferences.getInstance();
                 prefs.setString("user", item.value);
-                Workmanager().registerPeriodicTask(
-                    "check-connection",
-                    frequency: const Duration(days: 1),
-                    "check-connection-task",
-                    constraints:
-                        Constraints(networkType: NetworkType.connected),
-                    existingWorkPolicy: ExistingWorkPolicy.replace);
+                if (Platform.isAndroid) {
+                  Workmanager().registerPeriodicTask(
+                      "check-connection",
+                      frequency: const Duration(days: 1),
+                      "check-connection-task",
+                      constraints:
+                          Constraints(networkType: NetworkType.connected),
+                      existingWorkPolicy: ExistingWorkPolicy.replace);
+                } else if (Platform.isIOS) {
+                  Workmanager().registerOneOffTask(
+                      "check-connection", "check-connection-task");
+                }
                 if (context.mounted) {
                   Navigator.pushReplacement(
                     context,

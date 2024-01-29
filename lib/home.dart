@@ -96,14 +96,20 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestPermission();
-    Workmanager().registerPeriodicTask(
-        "check-notifications", "check-notifications-task",
-        constraints: Constraints(networkType: NetworkType.connected),
-        existingWorkPolicy: ExistingWorkPolicy.replace);
-    Workmanager().registerPeriodicTask("check-events", "check-events-task",
-        constraints: Constraints(networkType: NetworkType.connected),
-        frequency: const Duration(minutes: 15),
-        existingWorkPolicy: ExistingWorkPolicy.replace);
+    if (Platform.isAndroid) {
+      Workmanager().registerPeriodicTask(
+          "check-notifications", "check-notifications-task",
+          constraints: Constraints(networkType: NetworkType.connected),
+          existingWorkPolicy: ExistingWorkPolicy.replace);
+      Workmanager().registerPeriodicTask("check-events", "check-events-task",
+          constraints: Constraints(networkType: NetworkType.connected),
+          frequency: const Duration(minutes: 15),
+          existingWorkPolicy: ExistingWorkPolicy.replace);
+    } else if (Platform.isIOS) {
+      Workmanager().registerOneOffTask(
+          "check-notifications", "check-nootifications-task");
+      Workmanager().registerOneOffTask("check-events", "check-events-task");
+    }
     super.initState();
   }
 
