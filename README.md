@@ -40,7 +40,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Developpers 
 
-* **Adam Elaoumari** - Lead Flutter & Android Dev - [Github](https://github.com/AdamLBS) - [LinkedIn](https://www.linkedin.com/in/adam-elaoumari/)
+* **Adam Elaoumari** - Lead Flutter & Android/iOS Dev - [Github](https://github.com/AdamLBS) - [LinkedIn](https://www.linkedin.com/in/adam-elaoumari/)
 
 * **Martin Ramdane** - Dev Flutter & iOS Dev - [Github](https://github.com/MartinRamdane) - [LinkedIn](https://www.linkedin.com/in/martin-ramdane-0874a7233/)
 
