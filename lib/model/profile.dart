@@ -7,7 +7,6 @@ class Profile {
   final String activeLogTime;
   final String fullCredits;
   final String email;
-  final String cookie;
   final String idleLogTime;
   final String promo;
   final String studentyear;
@@ -22,7 +21,6 @@ class Profile {
       required this.idleLogTime,
       required this.fullCredits,
       required this.email,
-      required this.cookie,
       required this.promo,
       required this.studentyear});
 }

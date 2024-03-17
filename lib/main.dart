@@ -76,7 +76,7 @@ void callbackDispatcher() {
         await getNewCookie();
       } catch (e) {
         if (kDebugMode) {
-          print("error : $e");
+          print("error 1 : $e");
         }
       }
       return (true);
@@ -86,7 +86,7 @@ void callbackDispatcher() {
         await checkForEvents();
       } catch (e) {
         if (kDebugMode) {
-          print("error : $e");
+          print("error 2 : $e");
         }
       }
       return (true);
@@ -157,34 +157,38 @@ class _LoginIntraState extends State<LoginIntra> {
             final cookieManager = WebviewCookieManager();
             final gotCookies =
                 await cookieManager.getCookies('https://intra.epitech.eu');
+            final prefs = await SharedPreferences.getInstance();
+            Map<String, String?> cookies = {};
             for (var item in gotCookies) {
-              if (item.name == "user") {
-                final prefs = await SharedPreferences.getInstance();
-                prefs.setString("user", item.value);
-                if (Platform.isAndroid) {
-                  Workmanager().registerPeriodicTask(
-                      "check-connection",
-                      frequency: const Duration(days: 1),
-                      "check-connection-task",
-                      constraints:
-                          Constraints(networkType: NetworkType.connected),
-                      existingWorkPolicy: ExistingWorkPolicy.replace);
-                } else if (Platform.isIOS) {
-                  Workmanager().registerOneOffTask(
-                      "check-connection", "check-connection-task");
-                }
-                if (context.mounted) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const HomePageLoggedIn()),
-                  );
-                }
-                return;
+              cookies[item.name] = item.value;
+            }
+            await prefs.setString("cookies", json.encode(cookies));
+            if (kDebugMode) {
+              print("cookies : $cookies");
+            }
+            if (cookies.containsKey("user")) {
+              if (Platform.isAndroid) {
+                Workmanager().registerPeriodicTask(
+                    "check-connection",
+                    frequency: const Duration(days: 1),
+                    "check-connection-task",
+                    constraints:
+                        Constraints(networkType: NetworkType.connected),
+                    existingWorkPolicy: ExistingWorkPolicy.replace);
+              } else if (Platform.isIOS) {
+                Workmanager().registerOneOffTask(
+                    "check-connection", "check-connection-task");
+              }
+              if (context.mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const HomePageLoggedIn()),
+                );
               }
             }
           },
-          onWebResourceError: (WebResourceError error) {
+          onWebResourceError: (var error) {
             debugPrint('''
 Page resource error:
   code: ${error.errorCode}
@@ -211,7 +215,10 @@ Page resource error:
           );
         },
       )
-      ..loadRequest(Uri.parse('https://intra.epitech.eu'));
+      ..loadRequest(Uri.parse('https://intra.epitech.eu'), headers: {
+        "User-Agent":
+            "Mozilla/5.0 (Linux; Android 10; SM-G960F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.181 Mobile Safari/537.36"
+      });
 
     // #docregion platform_features
     if (controller.platform is AndroidWebViewController) {
@@ -321,11 +328,11 @@ Future<void> getNewCookie() async {
       await webViewCookie.getCookies('https://login.microsoftonline.com/');
   final all = await webViewCookie.getCookies(null);
   final cookiesSts = await webViewCookie.getCookies('https://sts.epitech.eu');
-  await cookieManager.deleteCookie(
-      url: Uri.parse("https://intra.epitech.eu"), name: "user");
+  await cookieManager.deleteCookies(
+      url: WebUri.uri(Uri.parse("https://intra.epitech.eu")));
   for (var cookie in cookies) {
     await cookieManager.setCookie(
-        url: Uri.parse("login.microsoftonline.com"),
+        url: WebUri.uri(Uri.parse("login.microsoftonline.com")),
         name: cookie.name,
         value: cookie.value,
         isSecure: cookie.secure,
@@ -333,7 +340,7 @@ Future<void> getNewCookie() async {
   }
   for (var cookie in cookiesSts) {
     await cookieManager.setCookie(
-        url: Uri.parse("sts.epitech.eu"),
+        url: WebUri.uri(Uri.parse("sts.epitech.eu")),
         name: cookie.name,
         value: cookie.value,
         isSecure: cookie.secure,
@@ -341,7 +348,7 @@ Future<void> getNewCookie() async {
   }
   for (var cookie in all) {
     await cookieManager.setCookie(
-        url: Uri.parse(cookie.domain!),
+        url: WebUri.uri(Uri.parse(cookie.domain!)),
         name: cookie.name,
         value: cookie.value,
         isSecure: cookie.secure,
@@ -349,14 +356,22 @@ Future<void> getNewCookie() async {
   }
   headlessWebView = HeadlessInAppWebView(
     initialUrlRequest: URLRequest(
-        url: Uri.parse(
-            "https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=e05d4149-1624-4627-a5ba-7472a39e43ab&redirect_uri=https%3A%2F%2Fintra.epitech.eu%2Fauth%2Foffice365&state=%2F&HSU=1&login_hint=$email")),
+        url: WebUri.uri(Uri.parse(
+            "https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=e05d4149-1624-4627-a5ba-7472a39e43ab&redirect_uri=https%3A%2F%2Fintra.epitech.eu%2Fauth%2Foffice365&state=%2F&HSU=1&login_hint=$email"))),
     onLoadStop: (controller, url) async {
       if (url == Uri.parse("https://intra.epitech.eu/")) {
         loadingCompleter.complete();
-        var userCookie = await cookieManager.getCookie(
-            url: Uri.parse("https://intra.epitech.eu/"), name: "user");
-        prefs.setString("user", userCookie?.value);
+        var userCookie = await cookieManager.getCookies(
+            url: WebUri.uri(Uri.parse("https://intra.epitech.eu/")));
+        final prefs = await SharedPreferences.getInstance();
+        Map<String, String?> cookies = {};
+        for (var item in userCookie) {
+          cookies[item.name] = item.value;
+        }
+        await prefs.setString("cookies", json.encode(cookies));
+        if (kDebugMode) {
+          print("cookies in back : $cookies");
+        }
       }
     },
   );
@@ -364,7 +379,7 @@ Future<void> getNewCookie() async {
   await loadingCompleter.future;
   await headlessWebView.dispose();
   var userCookie = await cookieManager.getCookie(
-      url: Uri.parse("https://intra.epitech.eu"), name: "user");
+      url: WebUri.uri(Uri.parse("https://intra.epitech.eu")), name: "user");
   if (userCookie == null) {
     return;
   }

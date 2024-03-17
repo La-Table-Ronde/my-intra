@@ -6,7 +6,6 @@ import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:http/http.dart' as http;
 import 'package:in_app_update/in_app_update.dart';
 import 'package:my_intra/calendar_widget.dart';
 import 'package:my_intra/home_widget.dart';
@@ -16,6 +15,7 @@ import 'package:my_intra/model/projects.dart';
 import 'package:my_intra/notifications_widget.dart';
 import 'package:my_intra/onboarding.dart';
 import 'package:my_intra/profile.dart';
+import 'package:my_intra/utils/fetch_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -95,7 +95,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
     globals.flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestPermission();
+        ?.requestNotificationsPermission();
     if (Platform.isAndroid) {
       Workmanager().registerPeriodicTask(
           "check-notifications", "check-notifications-task",
@@ -197,7 +197,7 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
                           globals.flutterLocalNotificationsPlugin
                               .resolvePlatformSpecificImplementation<
                                   AndroidFlutterLocalNotificationsPlugin>()!
-                              .requestPermission();
+                              .requestNotificationsPermission();
                         }
                         setState(() {
                           firstRun = false;
@@ -240,20 +240,30 @@ class _HomePageLoggedInState extends State<HomePageLoggedIn> {
 
 Future<bool> checkUserLoggedIn() async {
   final prefs = await SharedPreferences.getInstance();
-  String? user = prefs.getString("user");
-  if (user == null) {
+  String? cookies = prefs.getString("cookies");
+  if (cookies == null) {
     return false;
   }
+  Map<String, String> cookieMap = {};
+  jsonDecode(cookies).forEach((key, value) {
+    cookieMap[key] = value;
+  });
+
   const url = 'https://intra.epitech.eu/user/?format=json';
-  final client = http.Client();
-  final cookieValue = user;
-  final request = http.Request('GET', Uri.parse(url));
-  request.headers['cookie'] = "user=$cookieValue";
+  HttpClient client = HttpClient();
+  HttpClientRequest clientRequest = await client.getUrl(Uri.parse(url));
+  clientRequest.cookies.addAll(cookieMap.entries
+      .map((e) => Cookie(e.key, e.value))
+      .toList(growable: false));
   final metric =
       FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
   await metric.start();
-  final response = await client.send(request);
+  HttpClientResponse response = await clientRequest.close();
   await metric.stop();
+
+  if (response.statusCode != 200) {
+    return false;
+  }
   if (response.statusCode != 200) {
     client.close();
     return false;
@@ -309,34 +319,43 @@ Future<Profile> getProfileData() async {
         idleLogTime: "15",
         fullCredits: "150",
         email: "adam.elaoumari@epitech.eu",
-        cookie: "0",
         promo: "MAR",
         studentyear: "2");
   }
   final prefs = await SharedPreferences.getInstance();
-  String? user = prefs.getString("user");
+  String? cookies = prefs.getString("cookies");
+  if (cookies == null) {
+    return Future.error("No cookies");
+  }
+  Map<String, String> cookieMap = {};
+  jsonDecode(cookies).forEach((key, value) {
+    cookieMap[key] = value;
+  });
+
   const url = 'https://intra.epitech.eu/user/?format=json';
-  final client = http.Client();
-  final cookieValue = user;
-  final request = http.Request('GET', Uri.parse(url));
-  request.headers['cookie'] = "user=$cookieValue";
+  HttpClient client = HttpClient();
+  HttpClientRequest clientRequest = await client.getUrl(Uri.parse(url));
+  clientRequest.cookies.addAll(cookieMap.entries
+      .map((e) => Cookie(e.key, e.value))
+      .toList(growable: false));
   final metric =
       FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
   await metric.start();
-  final response = await client.send(request);
+  HttpClientResponse response = await clientRequest.close();
+  await metric.stop();
+
   if (response.statusCode != 200) {
     return Future.error("Error${response.statusCode}");
   }
-  final responseBytes = await response.stream.toList();
-  final responseString =
-      utf8.decode(responseBytes.expand((byte) => byte).toList());
-  final value = jsonDecode(responseString);
+  final stringData = await response.transform(utf8.decoder).join();
+
+  final value = jsonDecode(stringData);
   metric
-    ..responseContentType = response.headers['content-type']
-    ..responsePayloadSize = responseBytes.length
-    ..requestPayloadSize = utf8.encode(request.body).length
+    ..responseContentType = response.headers.contentType.toString()
+    ..responsePayloadSize = utf8.encode(stringData).length
+    ..requestPayloadSize = utf8.encode("").length
     ..httpResponseCode = response.statusCode
-    ..putAttribute("request_payload", request.body);
+    ..putAttribute("request_payload", stringData);
   await metric.stop();
   Profile myProfile = Profile(
       gpa: value['gpa'][0]['gpa'] == null
@@ -352,7 +371,6 @@ Future<Profile> getProfileData() async {
           value['nsstat'] != null ? value['nsstat']['idle'].toString() : "0",
       fullCredits: value['credits'] != null ? value['credits'].toString() : "0",
       email: value['internal_email'].toString(),
-      cookie: cookieValue!,
       promo: value['promo'] != null ? value['promo'].toString() : "0",
       studentyear:
           value['studentyear'] != null ? value['studentyear'].toString() : "0");
@@ -374,30 +392,18 @@ Future<List<Projects>> getProjectData() async {
     return list;
   }
   final prefs = await SharedPreferences.getInstance();
-  String? user = prefs.getString("user");
-  const url = 'https://intra.epitech.eu/?format=json';
-  final client = http.Client();
-  final cookieValue = user;
-  final request = http.Request('GET', Uri.parse(url));
-  request.headers['cookie'] = "user=$cookieValue";
-  final metric =
-      FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
-  await metric.start();
-  final response = await client.send(request);
-  if (response.statusCode != 200) {
-    return Future.error("Error${response.statusCode}");
+  String? cookies = prefs.getString("cookies");
+  if (cookies == null) {
+    return Future.error("No cookies");
   }
-  final responseBytes = await response.stream.toList();
-  final responseString =
-      utf8.decode(responseBytes.expand((byte) => byte).toList());
-  metric
-    ..responseContentType = response.headers['content-type']
-    ..responsePayloadSize = responseBytes.length
-    ..requestPayloadSize = utf8.encode(request.body).length
-    ..httpResponseCode = response.statusCode
-    ..putAttribute("request_payload", request.body);
-  await metric.stop();
-  final value = jsonDecode(responseString);
+  Map<String, String> cookieMap = {};
+  jsonDecode(cookies).forEach((key, value) {
+    cookieMap[key] = value;
+  });
+
+  const url = 'https://intra.epitech.eu/?format=json';
+  final stringData = await fetchData(url);
+  final value = jsonDecode(stringData);
   List<dynamic> projects = value['board']['projets'];
   List<Projects> list = [];
   for (var project in projects) {
@@ -412,25 +418,7 @@ Future<List<Projects>> getProjectData() async {
     titleLink = titleLink.replaceAll('\\', '');
     projectLink = titleLink;
     titleLink = 'https://intra.epitech.eu${titleLink}project/?format=json';
-    final request = http.Request('GET', Uri.parse(titleLink));
-    request.headers['cookie'] = "user=$cookieValue";
-    final metric =
-        FirebasePerformance.instance.newHttpMetric(titleLink, HttpMethod.Get);
-    await metric.start();
-    final response = await client.send(request);
-    final responseBytes = await response.stream.toList();
-    metric
-      ..responseContentType = response.headers['content-type']
-      ..responsePayloadSize = responseBytes.length
-      ..requestPayloadSize = utf8.encode(request.body).length
-      ..httpResponseCode = response.statusCode
-      ..putAttribute("request_payload", request.body);
-    await metric.stop();
-    if (response.statusCode != 200) {
-      return Future.error("Error${response.statusCode}");
-    }
-    final responseString =
-        utf8.decode(responseBytes.expand((byte) => byte).toList());
+    final responseString = await fetchData(titleLink);
     final value = jsonDecode(responseString);
     DateTime startProject = DateTime.parse(value['begin']);
     bool registrable =
@@ -462,23 +450,8 @@ Future<List<Notifications>> getNotifications(bool? foreground) async {
     return list;
   }
   final prefs = await SharedPreferences.getInstance();
-  String? user = prefs.getString("user");
-  const url = 'https://intra.epitech.eu/?format=json';
-  final client = http.Client();
-  final cookieValue = user;
-  final request = http.Request('GET', Uri.parse(url));
-  request.headers['cookie'] = "user=$cookieValue";
-  final metric =
-      FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
-  await metric.start();
-  final response = await client.send(request);
-  await metric.stop();
-  if (response.statusCode != 200) {
-    return Future.error("Error${response.statusCode}");
-  }
-  final responseBytes = await response.stream.toList();
   final responseString =
-      utf8.decode(responseBytes.expand((byte) => byte).toList());
+      await fetchData('https://intra.epitech.eu/?format=json');
   final value = jsonDecode(responseString);
   List<dynamic> notifs = value['history'];
   List<Notifications> list = [];

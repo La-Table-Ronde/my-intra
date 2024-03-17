@@ -1,16 +1,15 @@
 import 'dart:convert';
 
-import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:html/parser.dart' show parseFragment;
-import 'package:http/http.dart' as http;
 import 'package:my_intra/home.dart';
 import 'package:my_intra/main.dart';
 import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
+import 'package:my_intra/utils/fetch_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: must_be_immutable
@@ -343,19 +342,9 @@ Future<bool> registerToProject(Projects project) async {
     return false;
   }
   final url = project.registerUrl;
-  final metric =
-      FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
-  await metric.start();
-  final client = http.Client();
-  final cookieValue = user;
-  final request = http.Request('POST', Uri.parse(url));
-  request.headers['cookie'] = "user=$cookieValue";
-  final response = await client.send(request);
-  await metric.stop();
+  final response = await postData(url, null);
   if (response.statusCode != 200) {
-    client.close();
     return false;
   }
-  client.close();
   return true;
 }
