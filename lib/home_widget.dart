@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +8,7 @@ import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
 import 'package:my_intra/utils/files_modal.dart';
+import 'package:my_intra/utils/get_image.dart';
 
 import 'consts.dart' as consts;
 import 'globals.dart' as globals;
@@ -62,20 +65,35 @@ class _HomeWidgetState extends State<HomeWidget> {
                   ],
                 ),
                 if (globals.adminMode == false)
-                  ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(15)),
-                    child: Image.network(
-                      'https://intra.epitech.eu/file/userprofil/profilview/${widget.data.email}.png',
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.person,
-                            color: Colors.black, size: 44);
-                      },
-                      width: 64,
-                      height: 64,
-                      headers: {'Cookie': 'user=${widget.data.cookie}'},
-                      scale: 2,
-                    ),
-                  ),
+                  FutureBuilder(
+                      future: fetchImage(
+                          'https://intra.epitech.eu/file/userprofil/profilview/${widget.data.email}.png'),
+                      builder: (context, AsyncSnapshot<Uint8List> snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        }
+                        if (snapshot.hasError) {
+                          return const Center(
+                            child: Icon(Icons.person),
+                          );
+                        }
+                        return ClipRRect(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(15)),
+                          child: Image.memory(
+                            snapshot.data!,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(Icons.person,
+                                  color: Colors.black, size: 44);
+                            },
+                            width: 64,
+                            height: 64,
+                            // headers: {'Cookie': 'user=${widget.data.cookie}'},
+                            scale: 2,
+                          ),
+                        );
+                      }),
               ],
             ),
           ),

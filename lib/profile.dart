@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/style_text.dart';
+import 'package:my_intra/utils/get_image.dart';
 import 'package:pie_chart/pie_chart.dart';
 
 import 'globals.dart' as globals;
@@ -137,23 +140,30 @@ class _ProfilePageState extends State<ProfilePage> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         if (globals.adminMode == false)
-                          Center(
-                            child: ClipRRect(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(22)),
-                              child: Image.network(
-                                'https://intra.epitech.eu/file/userprofil/profilview/${widget.data.email}.png',
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(Icons.person,
-                                      color: Colors.white, size: 44);
-                                },
-                                headers: {
-                                  'Cookie': 'user=${widget.data.cookie}'
-                                },
-                                scale: 1.5,
-                              ),
-                            ),
-                          ),
+                          FutureBuilder(
+                              future: fetchImage(
+                                  'https://intra.epitech.eu/file/userprofil/profilview/${widget.data.email}.png'),
+                              builder:
+                                  (context, AsyncSnapshot<Uint8List> snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                }
+                                if (snapshot.hasError) {
+                                  return const Center(
+                                    child: Icon(Icons.person),
+                                  );
+                                }
+                                return Center(
+                                  child: ClipRRect(
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(22)),
+                                      child: Image.memory(snapshot.data!,
+                                          scale: 1.5, fit: BoxFit.cover)),
+                                );
+                              }),
                       ],
                     ),
                   ],
