@@ -22,7 +22,7 @@ import 'package:workmanager/workmanager.dart';
 import 'globals.dart' as globals;
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 class HomePageLoggedIn extends StatefulWidget {
-  const HomePageLoggedIn({Key? key}) : super(key: key);
+  const HomePageLoggedIn({super.key});
 
   @override
   State<HomePageLoggedIn> createState() => _HomePageLoggedInState();
@@ -333,30 +333,8 @@ Future<Profile> getProfileData() async {
   });
 
   const url = 'https://intra.epitech.eu/user/?format=json';
-  HttpClient client = HttpClient();
-  HttpClientRequest clientRequest = await client.getUrl(Uri.parse(url));
-  clientRequest.cookies.addAll(cookieMap.entries
-      .map((e) => Cookie(e.key, e.value))
-      .toList(growable: false));
-  final metric =
-      FirebasePerformance.instance.newHttpMetric(url, HttpMethod.Get);
-  await metric.start();
-  HttpClientResponse response = await clientRequest.close();
-  await metric.stop();
-
-  if (response.statusCode != 200) {
-    return Future.error("Error${response.statusCode}");
-  }
-  final stringData = await response.transform(utf8.decoder).join();
-
+  final stringData = await fetchData(url);
   final value = jsonDecode(stringData);
-  metric
-    ..responseContentType = response.headers.contentType.toString()
-    ..responsePayloadSize = utf8.encode(stringData).length
-    ..requestPayloadSize = utf8.encode("").length
-    ..httpResponseCode = response.statusCode
-    ..putAttribute("request_payload", stringData);
-  await metric.stop();
   Profile myProfile = Profile(
       gpa: value['gpa'][0]['gpa'] == null
           ? "0"

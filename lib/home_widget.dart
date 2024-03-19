@@ -15,12 +15,11 @@ import 'globals.dart' as globals;
 
 class HomeWidget extends StatefulWidget {
   const HomeWidget(
-      {Key? key,
+      {super.key,
       required this.data,
       required this.projects,
       this.notifications,
-      required this.index})
-      : super(key: key);
+      required this.index});
   final Future<List<Projects>>? projects;
   final Profile data;
   final Future<List<Notifications>>? notifications;

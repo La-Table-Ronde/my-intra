@@ -179,7 +179,7 @@ class _LoginIntraState extends State<LoginIntra> {
                 Workmanager().registerOneOffTask(
                     "check-connection", "check-connection-task");
               }
-              if (context.mounted) {
+              if (mounted) {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
@@ -359,7 +359,7 @@ Future<void> getNewCookie() async {
         url: WebUri.uri(Uri.parse(
             "https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=e05d4149-1624-4627-a5ba-7472a39e43ab&redirect_uri=https%3A%2F%2Fintra.epitech.eu%2Fauth%2Foffice365&state=%2F&HSU=1&login_hint=$email"))),
     onLoadStop: (controller, url) async {
-      if (url == Uri.parse("https://intra.epitech.eu/")) {
+      if (url == WebUri("https://intra.epitech.eu/")) {
         loadingCompleter.complete();
         var userCookie = await cookieManager.getCookies(
             url: WebUri.uri(Uri.parse("https://intra.epitech.eu/")));
