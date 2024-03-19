@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/foundation.dart';
-import 'package:my_intra/main.dart';
+import 'package:my_intra/utils/background_workers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<String> fetchData(String url) async {
