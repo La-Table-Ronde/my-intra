@@ -15,11 +15,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ignore: must_be_immutable
 class NotificationsWidget extends StatefulWidget {
   NotificationsWidget(
-      {Key? key,
+      {super.key,
       required this.notifications,
       this.projects,
-      required this.data})
-      : super(key: key);
+      required this.data});
   Future<List<Projects>>? projects;
   final Profile data;
   Future<List<Notifications>>? notifications;

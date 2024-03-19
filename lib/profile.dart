@@ -10,8 +10,7 @@ import 'package:pie_chart/pie_chart.dart';
 import 'globals.dart' as globals;
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key, required this.data, required this.scaffoldKey})
-      : super(key: key);
+  const ProfilePage({super.key, required this.data, required this.scaffoldKey});
   final Profile data;
   final GlobalKey<ScaffoldState> scaffoldKey;
 

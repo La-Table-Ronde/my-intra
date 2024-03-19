@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_performance/firebase_performance.dart';
+import 'package:flutter/foundation.dart';
+import 'package:my_intra/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<String> fetchData(String url) async {
@@ -16,6 +18,8 @@ Future<String> fetchData(String url) async {
   });
   HttpClient client = HttpClient();
   HttpClientRequest clientRequest = await client.getUrl(Uri.parse(url));
+  clientRequest.headers.set('User-Agent',
+      'Mozilla/5.0 (Linux; Android 10; SM-G960F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.181 Mobile Safari/537.36');
   clientRequest.cookies.addAll(cookieMap.entries
       .map((e) => Cookie(e.key, e.value))
       .toList(growable: false));
@@ -32,13 +36,23 @@ Future<String> fetchData(String url) async {
     ..putAttribute("request_payload", stringData);
 
   await metric.stop();
-  if (response.statusCode != 200) {
-    return Future.error("Error${response.statusCode}");
+  if (response.statusCode == 503) {
+    if (kDebugMode) {
+      print("CDN Blocked us getting new cookie");
+    }
+    await getNewCookie();
+    if (kDebugMode) {
+      print("got it");
+    }
+    return await fetchData(url);
+  } else if (response.statusCode != 200) {
+    return Future.error("Error : ${response.statusCode}");
   }
   return stringData;
 }
 
-Future<HttpClientResponse> postData(String url, Map<String, String>? body) async {
+Future<HttpClientResponse> postData(
+    String url, Map<String, String>? body) async {
   final prefs = await SharedPreferences.getInstance();
   String? cookies = prefs.getString("cookies");
   if (cookies == null) {
@@ -71,7 +85,7 @@ Future<HttpClientResponse> postData(String url, Map<String, String>? body) async
   return response;
 }
 
-Future<List<int>> fetchBytes (String url) async {
+Future<List<int>> fetchBytes(String url) async {
   final prefs = await SharedPreferences.getInstance();
   String? cookies = prefs.getString("cookies");
   if (cookies == null) {

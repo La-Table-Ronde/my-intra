@@ -10,7 +10,7 @@ import 'package:my_intra/main.dart';
 import 'globals.dart' as globals;
 
 class OnboardingWidget extends StatefulWidget {
-  const OnboardingWidget({Key? key}) : super(key: key);
+  const OnboardingWidget({super.key});
 
   @override
   State<OnboardingWidget> createState() => _OnboardingWidgetState();
