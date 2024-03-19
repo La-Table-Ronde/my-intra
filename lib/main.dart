@@ -7,18 +7,15 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:html/parser.dart';
 // ignore_for_file: public_member_api_docs
 
 import 'package:my_intra/home.dart';
-import 'package:my_intra/model/notifications.dart';
+import 'package:my_intra/utils/background_workers.dart';
 import 'package:my_intra/utils/check_for_events.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_cookie_manager/webview_cookie_manager.dart';
-import 'package:webview_cookie_manager/webview_cookie_manager.dart'
-    as webview_cookie;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -237,11 +234,11 @@ Page resource error:
       backgroundColor: Colors.white,
       appBar: null,
       body: SafeArea(child: WebViewWidget(controller: _controller)),
-      floatingActionButton: favoriteButton(),
+      floatingActionButton: helpBtn(),
     );
   }
 
-  Widget favoriteButton() {
+  Widget helpBtn() {
     return ElevatedButton(
       onPressed: () async {
         showDialogConnexionIntra(context);
@@ -268,120 +265,3 @@ void onDidReceiveNotificationResponse(NotificationResponse details) {
   if (kDebugMode) {}
 }
 
-Future<void> setAllNotifsToSent() async {
-  Completer loadingCompleter = Completer();
-  final prefs = await SharedPreferences.getInstance();
-  List<Notifications> list = [];
-  String? data = prefs.getString("notifications");
-  if (data != null) {
-    final jsonList = json.decode(data) as List<dynamic>;
-    list = jsonList.map((jsonObj) => Notifications.fromJson(jsonObj)).toList();
-  }
-  for (var notification in list) {
-    notification.notifSent = true;
-  }
-  List<Map<String, dynamic>> mapList = [];
-  for (Notifications obj in list) {
-    mapList.add(obj.toJson());
-  }
-  final jsonValue = json.encode(mapList);
-  await prefs
-      .setString("notifications", jsonValue)
-      .then((value) => loadingCompleter.complete());
-  await loadingCompleter.future;
-}
-
-Future<void> setAllNotifsToRead() async {
-  Completer loadingCompleter = Completer();
-  final prefs = await SharedPreferences.getInstance();
-  List<Notifications> list = [];
-  String? data = prefs.getString("notifications");
-  if (data != null) {
-    final jsonList = json.decode(data) as List<dynamic>;
-    list = jsonList.map((jsonObj) => Notifications.fromJson(jsonObj)).toList();
-  }
-  for (var notification in list) {
-    notification.read = true;
-  }
-  List<Map<String, dynamic>> mapList = [];
-  for (Notifications obj in list) {
-    mapList.add(obj.toJson());
-  }
-  final jsonValue = json.encode(mapList);
-  await prefs
-      .setString("notifications", jsonValue)
-      .then((value) => loadingCompleter.complete());
-  await loadingCompleter.future;
-}
-
-Future<void> getNewCookie() async {
-  final prefs = await SharedPreferences.getInstance();
-  String? email = prefs.getString("email");
-  if (email == null) {
-    return;
-  }
-  HeadlessInAppWebView? headlessWebView;
-  Completer loadingCompleter = Completer();
-  CookieManager cookieManager = CookieManager.instance();
-  final webViewCookie = webview_cookie.WebviewCookieManager();
-  final cookies =
-      await webViewCookie.getCookies('https://login.microsoftonline.com/');
-  final all = await webViewCookie.getCookies(null);
-  final cookiesSts = await webViewCookie.getCookies('https://sts.epitech.eu');
-  await cookieManager.deleteCookies(
-      url: WebUri.uri(Uri.parse("https://intra.epitech.eu")));
-  for (var cookie in cookies) {
-    await cookieManager.setCookie(
-        url: WebUri.uri(Uri.parse("login.microsoftonline.com")),
-        name: cookie.name,
-        value: cookie.value,
-        isSecure: cookie.secure,
-        isHttpOnly: cookie.httpOnly);
-  }
-  for (var cookie in cookiesSts) {
-    await cookieManager.setCookie(
-        url: WebUri.uri(Uri.parse("sts.epitech.eu")),
-        name: cookie.name,
-        value: cookie.value,
-        isSecure: cookie.secure,
-        isHttpOnly: cookie.httpOnly);
-  }
-  for (var cookie in all) {
-    await cookieManager.setCookie(
-        url: WebUri.uri(Uri.parse(cookie.domain!)),
-        name: cookie.name,
-        value: cookie.value,
-        isSecure: cookie.secure,
-        isHttpOnly: cookie.httpOnly);
-  }
-  headlessWebView = HeadlessInAppWebView(
-    initialUrlRequest: URLRequest(
-        url: WebUri.uri(Uri.parse(
-            "https://login.microsoftonline.com/common/oauth2/authorize?response_type=code&client_id=e05d4149-1624-4627-a5ba-7472a39e43ab&redirect_uri=https%3A%2F%2Fintra.epitech.eu%2Fauth%2Foffice365&state=%2F&HSU=1&login_hint=$email"))),
-    onLoadStop: (controller, url) async {
-      if (url == WebUri("https://intra.epitech.eu/")) {
-        loadingCompleter.complete();
-        var userCookie = await cookieManager.getCookies(
-            url: WebUri.uri(Uri.parse("https://intra.epitech.eu/")));
-        final prefs = await SharedPreferences.getInstance();
-        Map<String, String?> cookies = {};
-        for (var item in userCookie) {
-          cookies[item.name] = item.value;
-        }
-        await prefs.setString("cookies", json.encode(cookies));
-        if (kDebugMode) {
-          print("cookies in back : $cookies");
-        }
-      }
-    },
-  );
-  await headlessWebView.run();
-  await loadingCompleter.future;
-  await headlessWebView.dispose();
-  var userCookie = await cookieManager.getCookie(
-      url: WebUri.uri(Uri.parse("https://intra.epitech.eu")), name: "user");
-  if (userCookie == null) {
-    return;
-  }
-  prefs.setString("user", userCookie.value);
-}

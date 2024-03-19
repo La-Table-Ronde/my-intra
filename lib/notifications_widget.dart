@@ -5,10 +5,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:html/parser.dart' show parseFragment;
 import 'package:my_intra/home.dart';
-import 'package:my_intra/main.dart';
 import 'package:my_intra/model/notifications.dart';
 import 'package:my_intra/model/profile.dart';
 import 'package:my_intra/model/projects.dart';
+import 'package:my_intra/utils/background_workers.dart';
 import 'package:my_intra/utils/fetch_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
